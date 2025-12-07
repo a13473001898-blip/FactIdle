@@ -4,17 +4,11 @@ import { 建筑 as 建筑配置, 物品 as 物品配置, 配方 as 配方配置 
 
 export const 游戏数据 = reactive({
     库存:{
-        tie_kuang : 1124,
-        tong_kuang : 100,
-        tie_ban : 100,
-        shi_tou : 100,
-        kuang_ji : 1000,
-        shi_lu : 1000,
+
     },
 
     配方分配 : {
         tie_ban_r : {
-            shi_lu : 50
         }
     },
 
@@ -130,4 +124,35 @@ export function 更新全局速率() {
     }
     
     console.log("速率已更新", 游戏数据.速率);
+}
+
+let 上次时间 = Date.now();
+
+export function 启动游戏循环() {
+    
+    const loop = () => {
+        const 现在时间 = Date.now();
+        const 过去的时间秒 = 现在时间 /1000 - 上次时间 / 1000
+
+        if (现在时间 > 上次时间) {
+            for (const id in 游戏数据.速率) {
+                
+                const 净值速率 = 游戏数据.速率[id].净值
+                if (净值速率 === 0) continue;
+
+                const 增加量 = 净值速率 * 过去的时间秒
+
+                if (游戏数据.库存[id] === undefined) {
+                    游戏数据.库存[id] = 0;
+                }
+                游戏数据.库存[id] += 增加量
+            }
+        }
+
+        上次时间 = 现在时间;
+        requestAnimationFrame(loop);
+    };
+
+    // 第一次启动
+    loop();
 }

@@ -49,7 +49,7 @@ const 速率文本 = computed(() => {
 
   if (props.速率 === 0) return ''; // 没变化就不显示，或者显示 '0/s'
 
-  const 格式化速率 = 格式化数字(Math.abs(速率数值).toFixed(2));
+  const 格式化速率 = 格式化数字(Math.abs(速率数值));
 
   const sign = props.速率 > 0 ? '+' : '-';
 

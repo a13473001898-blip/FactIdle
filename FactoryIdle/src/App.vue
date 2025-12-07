@@ -5,7 +5,7 @@ import wu_pin_ka_pian from './components/wu_pin_ka_pian.vue';
 import Xiang_qing_lan from './components/xiang_qing_lan/index.vue';
 
 import { 物品 as 物品配置, 配方 as 配方配置, 建筑 as 建筑配置 } from './pei_zhi_shu_ju.js';
-import { 更新全局速率, 游戏数据 } from './dong_tai_shu_ju.js';
+import { 更新全局速率, 游戏数据,启动游戏循环 } from './dong_tai_shu_ju.js';
 
 
 //选择的物品
@@ -21,6 +21,10 @@ watch(
   更新全局速率,
   {deep : true,immediate : true}
 )
+
+onMounted(() => {
+  启动游戏循环();
+});
 
 </script>
 
