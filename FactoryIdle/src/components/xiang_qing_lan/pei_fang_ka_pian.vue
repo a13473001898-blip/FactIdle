@@ -40,13 +40,13 @@
 
             <!-- 分配建筑 -->
             <n-button-group size="tiny">
-              <n-button @click="调整建筑分配数量(recipe.id, machineId, -1)">-</n-button>
+              <n-button @click="减少配方分配建筑数量(recipe.id, machineId, 1*倍率)">-</n-button>
               
               <div style="padding: 0 12px; background: white; border: 1px solid #eee; display: flex; align-items: center; justify-content: center;">
-                 {{ 格式化数字(游戏数据.配方分配[recipe.id]?.[machineId]?.数量) || 0 }}
+                 {{ 格式化数字(查询配方分配(recipe.id, machineId)) }}
               </div>
               
-              <n-button @click="调整建筑分配数量(recipe.id, machineId, 1)">+</n-button>
+              <n-button @click="增加配方分配建筑数量(recipe.id, machineId, 1*倍率)">+</n-button>
             </n-button-group>
 
           </div>
@@ -61,8 +61,9 @@
 <script setup>
 import { computed,ref,watch} from 'vue';
 import { 物品 as 物品配置, 配方 as 配方配置, 建筑 as 建筑配置 } from '../../pei_zhi_shu_ju.js';
-import { 游戏数据 } from '../../dong_tai_shu_ju.js';
+import { 游戏数据,增加配方分配建筑数量,减少配方分配建筑数量, 查询配方分配 } from '@/dong_tai_shu_ju.js';
 import { 格式化数字 } from '@/gong_ju.js';
+
 
 const props = defineProps(['itemId']);
 
@@ -94,35 +95,6 @@ const 获取可用机器ID列表 = (类型) => {
       .filter(b => b.类型 === 类型)
       .map(b => b.id);
 };
-
-// --- 3. 核心动作：数值加减 ---
-const 调整建筑分配数量 = (配方id, 建筑id, delta) => {
-    const 调整值 = delta * 倍率.value
-
-    if (调整值 > 0 ){
-        //判定库存够不够,如果真则减去
-        if( (游戏数据.库存[建筑id] || 0) < 调整值) return;
-            游戏数据.库存[建筑id] = 游戏数据.库存[建筑id] - 调整值
-
-            //初始化数据,并增加
-            if(!游戏数据.配方分配[配方id]) 游戏数据.配方分配[配方id] = {}
-            if(!游戏数据.配方分配[配方id][建筑id]) 游戏数据.配方分配[配方id][建筑id] = {数量:0,状态:'运行'}
-            游戏数据.配方分配[配方id][建筑id].数量 = 游戏数据.配方分配[配方id][建筑id].数量 + 调整值
-    }
-
-    else{
-        if ((游戏数据.配方分配[配方id][建筑id].数量 || 0) < -调整值) return;
-        游戏数据.配方分配[配方id][建筑id].数量 -= -调整值
-
-        //如果数值为0,删除掉
-        if (游戏数据.配方分配[配方id][建筑id].数量 === 0) {
-            delete 游戏数据.配方分配[配方id][建筑id];
-        }
-
-        if (!游戏数据.库存[建筑id]) 游戏数据.库存[建筑id] = 0;
-        游戏数据.库存[建筑id] += -调整值
-    }
-  };
 
   const 格式化配方物品 = (list) => {
     if (!list || list.length === 0) return '无';
