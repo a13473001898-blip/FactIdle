@@ -4,20 +4,49 @@ import { 建筑 as 建筑配置, 物品 as 物品配置, 配方 as 配方配置 
 
 export const 游戏数据 = reactive({
     库存:{
-
+        kuang_ji : 1000,
+        zu_zhuang_ji : 1000
     },
 
     配方分配 : {
-        tie_ban_r : {
-        }
+
     },
 
     速率 : {
-        tie_kuang : {产出: 1010,消耗: 0,净值: 100},
-        tie_ban : {产出: 5,消耗: 0,净值: 0},
-        mei_tan : {产出: 1,消耗: 0,净值: 0},
+        
     }
 })
+
+////////库存数据操作//
+
+export function 库存增加(id,数量,倍率=1) {
+    if(数量 < 0) return
+    if(!游戏数据.库存[id]) 游戏数据.库存[id] = 0
+
+    //库存上限判断
+
+    游戏数据.库存[id] += 数量 * 倍率
+}
+
+export function 库存减少(id,数量,倍率=1) {
+    if(数量 < 0) return false
+    if(!游戏数据.库存[id]) 游戏数据.库存[id] = 0
+
+    if(游戏数据.库存[id] < 数量) return false
+    游戏数据.库存[id] -= 数量 * 倍率
+    return true
+}
+
+export function 库存检查(输入数组,倍率=1) {
+    if(!输入数组 || 输入数组.length === 0 ) return true
+    for(const 输入 of 输入数组 ) {
+        const 库存物品 = 游戏数据.库存[输入.id] || 0
+        if( 库存物品 < 输入.数量 * 倍率) return false
+    }
+    return true
+}
+
+        //库存数据操作////////
 
 
 /**
@@ -28,36 +57,21 @@ export const 游戏数据 = reactive({
  */
 export function 执行配方生产(配方ID, 倍率 = 1) {
     const 配方 = 配方配置[配方ID];
-    
-    // 1. 安全检查
     if (!配方) return { success: false, msg: '配方不存在' };
 
     // --- 第一阶段：检查原料 (Check Phase) ---
-    for (const 原料 of 配方.输入) {
-        const 需要数量 = 原料.数量 * 倍率;
-
-        const 当前库存 = 游戏数据.库存[原料.id] || 0; 
-
-        if ( 当前库存 < 需要数量 ) {
-            return { success: false, msg: `${原料.id} 原料不足` };
-        }
+    if ( 库存检查(配方.输入) ) {
+        return { success: false, msg: `${原料.id} 原料不足` };
     }
 
     // --- 第二阶段：执行扣除 (Deduct Phase) ---
     for (const 原料 of 配方.输入) {
-        const 消耗数量 = 原料.数量 * 倍率;
-        
-        游戏数据.库存[原料.id] -= 消耗数量;
+        库存减少(原料.id, 产物.数量*倍率)
     }
 
     // --- 第三阶段：执行产出 (Add Phase) ---
     for (const 产物 of 配方.输出) {
-        const 产出数量 = 产物.数量 * 倍率;
-        
-        // 初始化一下，防止报错
-        if (!游戏数据.库存[产物.id]) 游戏数据.库存[产物.id] = 0;
-        
-        游戏数据.库存[产物.id] += 产出数量;
+        库存增加(产物.id, 产物.数量*倍率)
     }
 
     return { success: true, msg: '生产成功' };
@@ -86,11 +100,11 @@ export function 更新全局速率() {
         // 2.1 算出这个配方下的“总生产力” (总建筑速度)
         let 总建筑速度 = 0;
         for (const 建筑ID in 分配情况) {
-            const 数量 = 分配情况[建筑ID];
-            const 单个速度 = 建筑配置[建筑ID].速度;
+            if (分配情况[建筑ID].状态 !== '运行') continue
+
+            const 数量 = 分配情况[建筑ID].数量;
+            const 单个速度 = 建筑配置[建筑ID]?.速度 || 0;
             
-            // TODO: 请写出计算公式
-            // 总建筑速度 += ???
              总建筑速度 += 数量 * 单个速度;
         }
 

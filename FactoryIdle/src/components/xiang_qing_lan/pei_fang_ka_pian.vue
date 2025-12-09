@@ -15,6 +15,8 @@
           
           <n-flex justify="space-between" align="center" style="margin-bottom: 12px;">
              <n-text depth="3" style="font-size: 12px;">耗时: {{ recipe.时间 }}s</n-text>
+             <n-text depth="3" style="font-size: 12px;">输出: {{格式化配方物品(recipe.输出) }}</n-text>
+             <n-text depth="3" style="font-size: 12px;">输入: {{格式化配方物品(recipe.输入) }}</n-text>
              <n-radio-group v-model:value="倍率" size="tiny">
                 <n-radio-button :value="1">x1</n-radio-button>
                 <n-radio-button :value="5">x5</n-radio-button>
@@ -32,15 +34,16 @@
             <div>
                <n-text strong>{{ 物品配置[machineId].名称 }}</n-text>
                <n-text depth="3" style="font-size: 12px; margin-left: 8px;">
-                 (空闲: {{ 游戏数据.库存[machineId] || 0 }})
+                 (空闲: {{ Math.floor(游戏数据.库存[machineId] || 0) }})
                </n-text>
             </div>
 
+            <!-- 分配建筑 -->
             <n-button-group size="tiny">
               <n-button @click="调整建筑分配数量(recipe.id, machineId, -1)">-</n-button>
               
-              <div style="padding: 0 12px; background: white; border: 1px solid #eee; display: flex; align-items: center; min-width: 30px; justify-content: center;">
-                 {{ 游戏数据.配方分配[recipe.id]?.[machineId] || 0 }}
+              <div style="padding: 0 12px; background: white; border: 1px solid #eee; display: flex; align-items: center; justify-content: center;">
+                 {{ 格式化数字(游戏数据.配方分配[recipe.id]?.[machineId]?.数量) || 0 }}
               </div>
               
               <n-button @click="调整建筑分配数量(recipe.id, machineId, 1)">+</n-button>
@@ -59,6 +62,7 @@
 import { computed,ref,watch} from 'vue';
 import { 物品 as 物品配置, 配方 as 配方配置, 建筑 as 建筑配置 } from '../../pei_zhi_shu_ju.js';
 import { 游戏数据 } from '../../dong_tai_shu_ju.js';
+import { 格式化数字 } from '@/gong_ju.js';
 
 const props = defineProps(['itemId']);
 
@@ -102,16 +106,16 @@ const 调整建筑分配数量 = (配方id, 建筑id, delta) => {
 
             //初始化数据,并增加
             if(!游戏数据.配方分配[配方id]) 游戏数据.配方分配[配方id] = {}
-            if(!游戏数据.配方分配[配方id][建筑id]) 游戏数据.配方分配[配方id][建筑id] = 0
-            游戏数据.配方分配[配方id][建筑id] = 游戏数据.配方分配[配方id][建筑id] + 调整值
+            if(!游戏数据.配方分配[配方id][建筑id]) 游戏数据.配方分配[配方id][建筑id] = {数量:0,状态:'运行'}
+            游戏数据.配方分配[配方id][建筑id].数量 = 游戏数据.配方分配[配方id][建筑id].数量 + 调整值
     }
 
     else{
-        if ((游戏数据.配方分配[配方id][建筑id] || 0) < -调整值) return;
-        游戏数据.配方分配[配方id][建筑id] -= -调整值
+        if ((游戏数据.配方分配[配方id][建筑id].数量 || 0) < -调整值) return;
+        游戏数据.配方分配[配方id][建筑id].数量 -= -调整值
 
         //如果数值为0,删除掉
-        if (游戏数据.配方分配[配方id][建筑id] === 0) {
+        if (游戏数据.配方分配[配方id][建筑id].数量 === 0) {
             delete 游戏数据.配方分配[配方id][建筑id];
         }
 
@@ -119,4 +123,15 @@ const 调整建筑分配数量 = (配方id, 建筑id, delta) => {
         游戏数据.库存[建筑id] += -调整值
     }
   };
+
+  const 格式化配方物品 = (list) => {
+    if (!list || list.length === 0) return '无';
+  
+    return list.map(item => {
+        // 去物品配置里查名字，查不到就显示 ID 兜底
+        const 名称 = 物品配置[item.id]?.名称 || item.id;
+        return `${名称}x${item.数量}`;
+    }).join(', '); // 最后用逗号把它们连成一个字符串
+  };
+
 </script>
