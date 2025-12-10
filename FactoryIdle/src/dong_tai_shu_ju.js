@@ -175,7 +175,7 @@ export function 更新全局速率() {
     const 临时速率表 = {};
 
     // 预填所有物品，防止 UI 读到 undefined 报错
-    for (const key in 物品配置) {
+    for (const key in 获取所有物品列表()) {
         临时速率表[key] = { 产出: 0, 消耗: 0, 净值: 0 };
     }
 

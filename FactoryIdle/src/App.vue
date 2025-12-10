@@ -4,8 +4,8 @@ import { onMounted,onUnmounted,ref,watch } from 'vue';
 import wu_pin_ka_pian from './components/wu_pin_ka_pian.vue';
 import Xiang_qing_lan from './components/xiang_qing_lan/index.vue';
 
-import { 获取所有物品列表, 配方 as 配方配置, 建筑 as 建筑配置 } from './pei_zhi_shu_ju.js';
-import { 更新全局速率, 游戏数据,启动游戏循环 } from './dong_tai_shu_ju.js';
+import { 获取所有物品列表,} from './pei_zhi_shu_ju.js';
+import { 更新全局速率, 游戏数据,启动游戏循环, 查询库存, 查询速率 } from './dong_tai_shu_ju.js';
 
 
 //选择的物品
@@ -19,7 +19,7 @@ const handleAction = (id) => {
 watch(
   () => 游戏数据.配方分配,
   更新全局速率,
-  {deep : true,immediate : true}
+  {deep : true, immediate : true}
 )
 
 onMounted(() => {
@@ -40,8 +40,6 @@ onMounted(() => {
             :id="属性值.id"
             class="物品卡片"
             :名称="属性值.名称"
-            :数量="游戏数据.库存[属性值.id]"
-            :速率="游戏数据.速率[属性值.id]?.净值 || 0"
             @action="handleAction"
             />
         </n-flex>
