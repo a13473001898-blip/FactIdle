@@ -1,6 +1,6 @@
 import { reactive,computed,toRefs } from "vue";
 
-import { 建筑 as 建筑配置, 物品 as 物品配置, 配方 as 配方配置 } from './pei_zhi_shu_ju.js';
+import { 获取建筑数据,获取所有物品列表,获取配方数据 } from './pei_zhi_shu_ju.js';
 
 export const 游戏数据 = reactive({
     库存:{
@@ -35,7 +35,7 @@ function 速率数据模板() {
     return {
         产出: 0, 
         消耗: 0, 
-        净值: 0 
+        净值: 0,
     }
 }
 
@@ -100,7 +100,7 @@ export function 初始化配方分配数据(配方id,建筑id) {
  */
 export function 查询配方分配(配方id,建筑id) {
     const 配方数据 = 游戏数据.配方分配[配方id]
-    if (!建筑id) return 配方数据 || {} //如果没传建筑id,返回
+    if (!建筑id) return 配方数据 || {}
     return 配方数据?.[建筑id]?.数量 || 0
 }
 
@@ -118,10 +118,21 @@ export function 减少配方分配建筑数量 (配方id,建筑id,数量) {
 
     库存增加(建筑id,数量)
 
-    if (分配节点.数量 <= 0) {
+    if (游戏数据.配方分配[配方id][建筑id].数量 <= 0) {
     delete 游戏数据.配方分配[配方id][建筑id];
     }
 }
+
+
+// =================速率数据操作=================
+
+
+export function 查询速率(物品id,属性) {
+    const 速率数据 = 游戏数据.速率[物品id] || 速率数据模板()
+    if(!属性) return 速率数据
+    return 速率数据[属性]  || 0
+}
+
 
 // =================游戏核心函数=================
 
@@ -133,7 +144,7 @@ export function 减少配方分配建筑数量 (配方id,建筑id,数量) {
  * @returns {object} - 返回结果 { success: boolean, msg: string }
  */
 export function 执行配方生产(配方ID, 倍率 = 1) {
-    const 配方 = 配方配置[配方ID];
+    const 配方 = 获取配方数据(配方ID);
     if (!配方) return { success: false, msg: '配方不存在' };
 
     // --- 第一阶段：检查原料 (Check Phase) ---
@@ -172,7 +183,7 @@ export function 更新全局速率() {
     // 结构参考: 游戏数据.配方分配[配方ID][建筑ID] = 数量
     for (const 配方ID in 游戏数据.配方分配) {
         const 分配情况 = 游戏数据.配方分配[配方ID];
-        const 当前配方 = 配方配置[配方ID];
+        const 当前配方 = 获取配方数据(配方ID);
 
         // 2.1 算出这个配方下的“总生产力” (总建筑速度)
         let 总建筑速度 = 0;
@@ -180,7 +191,7 @@ export function 更新全局速率() {
             if (分配情况[建筑ID].状态 !== '运行') continue
 
             const 数量 = 分配情况[建筑ID].数量;
-            const 单个速度 = 建筑配置[建筑ID]?.速度 || 0;
+            const 单个速度 = 获取建筑数据(建筑ID)?.速度 || 0;
             
              总建筑速度 += 数量 * 单个速度;
         }

@@ -18,7 +18,7 @@ export const 建筑类型 = {
     制造 : '制造',
 }
 
-export const 物品 = {
+const 物品配置 = {
     //资源
     tie_kuang : {id:'tie_kuang',名称:'铁矿',类型:物品类型.资源,字节:1},
     tong_kuang : {id:'tong_kuang',名称:'铜矿',类型:物品类型.资源,字节:1},
@@ -36,7 +36,7 @@ export const 物品 = {
     zu_zhuang_ji : {id:'zu_zhuang_ji',名称:'组装机',类型:物品类型.建筑, 字节:2}
 }
 
-export const 配方 = {
+const 配方配置 = {
     //采集
     tie_kuang_r : {id:'tie_kuang_r',输入:[],输出:[{id:'tie_kuang',数量:1}],时间:1,类型:配方类型.采集},
     tong_kuang_r : {id:'tong_kuang_r',输入:[],输出:[{id:'tong_kuang',数量:1}],时间:1,类型:配方类型.采集},
@@ -53,9 +53,71 @@ export const 配方 = {
     zu_zhuang_ji_r : {id:'zu_zhuang_ji_r',输入:[{id:'tie_ban',数量:12},{id:'chi_lun',数量:4}],输出:[{id:'zu_zhuang_ji',数量:1}],时间:4,类型:配方类型.制造},
 }
 
-export const 建筑 ={
+const 建筑配置 ={
     shi_lu : {id:'shi_lu', 类型:建筑类型.熔炼, 速度:1,能耗:10000,占用:1},
     kuang_ji : {id:'kuang_ji', 类型:建筑类型.采集, 速度:1,能耗:40000,占用:1},
     zu_zhuang_ji : {id:'zu_zhuang_ji', 类型:建筑类型.制造, 速度:1,能耗:40000,占用:1},
 }
 
+function 冻结对象 (对象) {
+//  1.安全检查
+    if(对象 === null || typeof 对象 !== 'object') {
+        return 对象
+    } 
+
+//  2.遍历获得键值
+    for (const 键 of Object.keys(对象)) {
+        const 值 = 对象[键]
+
+//      3.检查值是否为对象
+        if(值 && typeof 值 === 'object' && !Object.isFrozen(值)) {
+            冻结对象(值)
+        }
+    }
+
+//  4.递归后对当前对象冻结
+    return Object.freeze(对象)
+}
+
+const 配置数据 = {
+    '物品类型' : 物品类型,
+    '配方类型' : 配方类型,
+    '建筑类型' : 建筑类型,
+    '物品' : 物品配置,
+    '配方' : 配方配置,
+    '建筑' : 建筑配置,
+}
+
+冻结对象(配置数据)
+
+/**
+ * 查不到返回 undefined，UI需要自己处理兜底
+ * 或者你可以改为返回一个 {名称:'未知'} 的空对象
+ */
+export function 获取物品数据(id) {
+    return 配置数据.物品[id];
+}
+
+export function 获取配方数据(id) {
+    return 配置数据.配方[id];
+}
+
+export function 获取建筑数据(id) {
+    return 配置数据.建筑[id];
+}
+
+/**
+ * 专门给 v-for 用的列表接口
+ * 直接返回整个对象，让外部去遍历 (key, value)
+ */
+export function 获取所有物品列表() {
+    return 配置数据.物品;
+}
+
+export function 获取所有配方列表() {
+    return 配置数据.配方;
+}
+
+export function 获取所有建筑列表() {
+    return 配置数据.建筑;
+}

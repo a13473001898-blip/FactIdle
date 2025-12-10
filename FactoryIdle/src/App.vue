@@ -4,7 +4,7 @@ import { onMounted,onUnmounted,ref,watch } from 'vue';
 import wu_pin_ka_pian from './components/wu_pin_ka_pian.vue';
 import Xiang_qing_lan from './components/xiang_qing_lan/index.vue';
 
-import { 物品 as 物品配置, 配方 as 配方配置, 建筑 as 建筑配置 } from './pei_zhi_shu_ju.js';
+import { 获取所有物品列表, 配方 as 配方配置, 建筑 as 建筑配置 } from './pei_zhi_shu_ju.js';
 import { 更新全局速率, 游戏数据,启动游戏循环 } from './dong_tai_shu_ju.js';
 
 
@@ -35,7 +35,7 @@ onMounted(() => {
         <h2 style="margin-bottom: 16px;">资源概览</h2>
         <n-flex>
           <wu_pin_ka_pian
-            v-for="(属性值,属性名) in 物品配置"
+            v-for="(属性值,属性名) in 获取所有物品列表()"
             :key="属性值.id"
             :id="属性值.id"
             class="物品卡片"

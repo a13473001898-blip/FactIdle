@@ -32,9 +32,9 @@
              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: #f9f9f9; padding: 8px; border-radius: 4px;"
           >
             <div>
-               <n-text strong>{{ 物品配置[machineId].名称 }}</n-text>
+               <n-text strong>{{ 获取物品数据(machineId).名称 }}</n-text>
                <n-text depth="3" style="font-size: 12px; margin-left: 8px;">
-                 (空闲: {{ Math.floor(游戏数据.库存[machineId] || 0) }})
+                 (空闲: {{ Math.floor(查询库存(machineId)) }})
                </n-text>
             </div>
 
@@ -60,8 +60,8 @@
 
 <script setup>
 import { computed,ref,watch} from 'vue';
-import { 物品 as 物品配置, 配方 as 配方配置, 建筑 as 建筑配置 } from '../../pei_zhi_shu_ju.js';
-import { 游戏数据,增加配方分配建筑数量,减少配方分配建筑数量, 查询配方分配 } from '@/dong_tai_shu_ju.js';
+import { 获取所有配方列表, 获取所有建筑列表, 获取物品数据 } from '../../pei_zhi_shu_ju.js';
+import {增加配方分配建筑数量,减少配方分配建筑数量, 查询配方分配, 查询库存 } from '@/dong_tai_shu_ju.js';
 import { 格式化数字 } from '@/gong_ju.js';
 
 
@@ -74,7 +74,7 @@ const 当前选中配方ID = ref(null);
 const 可用配方列表 = computed(() => {
   if (!props.itemId) return [];
   // 逻辑：遍历所有配方，返回输出包含 props.itemId 的配方
-  return Object.values(配方配置).filter(r => 
+  return Object.values(获取所有配方列表()).filter(r => 
       r.输出 && r.输出.some(out => out.id === props.itemId)
   );
 });
@@ -91,7 +91,7 @@ watch(可用配方列表, (newList) => {
 
 // --- 2. 找出某种类型（如'熔炼'）对应的机器 ID ---
 const 获取可用机器ID列表 = (类型) => {
-  return Object.values(建筑配置)
+  return Object.values(获取所有建筑列表())
       .filter(b => b.类型 === 类型)
       .map(b => b.id);
 };
@@ -101,7 +101,7 @@ const 获取可用机器ID列表 = (类型) => {
   
     return list.map(item => {
         // 去物品配置里查名字，查不到就显示 ID 兜底
-        const 名称 = 物品配置[item.id]?.名称 || item.id;
+        const 名称 = 获取物品数据(item.id)?.名称 || item.id;
         return `${名称}x${item.数量}`;
     }).join(', '); // 最后用逗号把它们连成一个字符串
   };

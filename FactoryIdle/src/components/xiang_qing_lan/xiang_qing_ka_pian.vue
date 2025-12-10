@@ -62,14 +62,14 @@
 
         <n-text depth="3" style="font-size: 12px;">
           占用空间: {{ 物品信息?.字节 }} 字节<br>
-          生产耗时: {{ 配方配置[props.id + '_r']?.时间 }}秒
+          生产耗时: {{ 获取配方数据(props.id + '_r')?.时间 }}秒
         </n-text>
 
         <n-divider v-if="物品信息?.类型 === '建筑'" />
 
         <n-text v-if="物品信息?.类型 === '建筑'" style="font-size: 12px;">
-          速度:{{ 建筑配置[props.id]?.速度 }}<br>
-          能耗: {{ 格式化数字(建筑配置[props.id]?.能耗) }} W/s
+          速度:{{ 获取建筑数据(props.id)?.速度 }}<br>
+          能耗: {{ 格式化数字(获取建筑数据(props.id)?.能耗) }} W/s
 
         </n-text>
 
@@ -90,8 +90,8 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 // 引入数据源
-import { 物品 as 物品配置, 配方, 配方类型, 配方 as 配方配置, 建筑 as 建筑配置} from '../../pei_zhi_shu_ju.js';
-import { 游戏数据 } from '../../dong_tai_shu_ju.js';
+import { 获取物品数据, 获取配方数据, 获取建筑数据, 获取所有配方列表} from '../../pei_zhi_shu_ju.js';
+import { 查询库存, 查询速率, } from '../../dong_tai_shu_ju.js';
 import { 执行配方生产 } from '../../dong_tai_shu_ju.js';
 import { 格式化数字 } from '@/gong_ju.js';
 
@@ -103,12 +103,12 @@ const props = defineProps({
 
 
 
-const 物品信息 = computed(() => props.id ? 物品配置[props.id] : {});
+const 物品信息 = computed(() => props.id ? 获取物品数据(props.id) : {});
 const 动态信息 = computed(() => {
   if (!props.id) return { 库存: 0, 速率: 0 };
   return {
-    库存: 游戏数据.库存[props.id] || 0,
-    速率: 游戏数据.速率[props.id]?.净值|| 0
+    库存: 查询库存(props.id),
+    速率: 查询速率(props.id,'净值')
   };
 });
 
@@ -117,7 +117,7 @@ const 生产配方 = computed(() => {
   if (!props.id) return null;
   
   // 遍历配方配置对象的值
-  return Object.values(配方配置).find(recipe => {
+  return Object.values(获取所有配方列表()).find(recipe => {
         if (recipe.类型 === '熔炼') {
             return false
         }
