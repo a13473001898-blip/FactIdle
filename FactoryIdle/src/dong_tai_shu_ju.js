@@ -4,8 +4,8 @@ import { 获取建筑数据,获取所有物品列表,获取配方数据 } from '
 
 export const 游戏数据 = reactive({
     库存:{
-        kuang_ji : 1000,
-        zu_zhuang_ji : 1000
+        kuang_ji : 0,
+        zu_zhuang_ji : 0
     },
 
     配方分配 : {
@@ -247,7 +247,13 @@ export function 启动游戏循环() {
                 if (游戏数据.库存[id] === undefined) {
                     游戏数据.库存[id] = 0;
                 }
-                游戏数据.库存[id] += 增加量
+                const 预计库存 = 游戏数据.库存[id] + 增加量
+
+                if (预计库存 < 0 ) {
+                    游戏数据.库存[id] = 0
+                } else {
+                    游戏数据.库存[id] = 预计库存
+                }
             }
         }
 

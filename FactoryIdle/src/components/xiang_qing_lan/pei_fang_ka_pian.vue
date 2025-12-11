@@ -61,7 +61,7 @@
 <script setup>
 import { computed,ref,watch} from 'vue';
 import { 获取所有配方列表, 获取所有建筑列表, 获取物品数据 } from '../../pei_zhi_shu_ju.js';
-import {增加配方分配建筑数量,减少配方分配建筑数量, 查询配方分配, 查询库存 } from '@/dong_tai_shu_ju.js';
+import {增加配方分配建筑数量,减少配方分配建筑数量, 查询配方分配,  查询库存 } from '@/dong_tai_shu_ju.js';
 import { 格式化数字 } from '@/gong_ju.js';
 
 
