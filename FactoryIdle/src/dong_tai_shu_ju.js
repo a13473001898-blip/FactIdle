@@ -4,8 +4,8 @@ import { 获取建筑数据,获取所有物品列表,获取配方数据 } from '
 
 export const 游戏数据 = reactive({
     库存:{
-        kuang_ji : 0,
-        zu_zhuang_ji : 0
+        kuang_ji : 5,
+        zu_zhuang_ji : 5
     },
 
     配方分配 : {
@@ -24,10 +24,10 @@ function 库存数据模板() {
     //占位符
 }
 
-function 配方分配数据模板() {
+function 配方分配数据模板(状态='运行') {
     return {
         数量 : 0,
-        状态 : '运行', //默认状态为运行
+        状态 : 状态, //默认状态为运行
     }
 }
 
@@ -92,13 +92,33 @@ export function 初始化配方分配数据(配方id,建筑id) {
     }
 }
 
+function 查询配方分配建筑 (配方id,建筑id) {
+    const 配方分配数据 = 游戏数据.配方分配?.[配方id]?.[建筑id]
+    if (!配方分配数据) return false
+    return 配方分配数据
+}
+
+export function 查询配方建筑状态(配方id, 建筑id) {
+    return 游戏数据.配方分配[配方id]?.[建筑id]?.状态 || '运行';
+}
+
+export function 切换建筑状态 (配方id,建筑id) {
+    const 建筑数据 = 游戏数据.配方分配?.[配方id]?.[建筑id]
+    if(!建筑数据) return
+    if(建筑数据.状态 === '运行') 建筑数据.状态 = '停止'
+    else {
+        建筑数据.状态 = '运行'
+    }
+    更新全局速率()
+}
+
 /**
  * 
  * @param {*} 配方id 必传
  * @param {*} 建筑id 可选,如果没有则返回配方id对应的对象
  * @returns 如果有建筑id返回对应的数量
  */
-export function 查询配方分配(配方id,建筑id) {
+export function 查询配方分配数量(配方id,建筑id) {
     const 配方数据 = 游戏数据.配方分配[配方id]
     if (!建筑id) return 配方数据 || {}
     return 配方数据?.[建筑id]?.数量 || 0
@@ -113,7 +133,7 @@ export const 增加配方分配建筑数量 = (配方id, 建筑id, 数量) => {
 }
 
 export function 减少配方分配建筑数量 (配方id,建筑id,数量) {
-    if (查询配方分配(配方id,建筑id) < 数量) return;
+    if (查询配方分配数量(配方id,建筑id) < 数量) return;
     游戏数据.配方分配[配方id][建筑id].数量 -= 数量
 
     库存增加(建筑id,数量)

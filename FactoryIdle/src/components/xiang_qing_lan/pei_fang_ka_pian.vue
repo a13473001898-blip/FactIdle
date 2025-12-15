@@ -13,41 +13,65 @@
       >
         <div style="padding: 16px;">
           
-          <n-flex justify="space-between" align="center" style="margin-bottom: 12px;">
-             <n-text depth="3" style="font-size: 12px;">耗时: {{ recipe.时间 }}s</n-text>
-             <n-text depth="3" style="font-size: 12px;">输出: {{格式化配方物品(recipe.输出) }}</n-text>
-             <n-text depth="3" style="font-size: 12px;">输入: {{格式化配方物品(recipe.输入) }}</n-text>
-             <n-radio-group v-model:value="倍率" size="tiny">
-                <n-radio-button :value="1">x1</n-radio-button>
-                <n-radio-button :value="5">x5</n-radio-button>
-                <n-radio-button :value="10">x10</n-radio-button>
-                <n-radio-button :value="50">x50</n-radio-button>
-                <n-radio-button :value="100">x100</n-radio-button>
-             </n-radio-group>
-          </n-flex>
+          <div style="margin-bottom: 16px; background-color: #f5f7fa; padding: 12px; border-radius: 8px;">
+            <n-flex justify="space-between" align="center" style="margin-bottom: 8px;">
+               <n-radio-group v-model:value="倍率" size="tiny">
+                  <n-radio-button :value="1">x1</n-radio-button>
+                  <n-radio-button :value="10">x10</n-radio-button>
+                  <n-radio-button :value="100">x100</n-radio-button>
+                  <n-radio-button :value="1000">x1000</n-radio-button>
+                  </n-radio-group>
+            </n-flex>
+            
+            <n-flex justify="space-between" style="font-size: 12px;">
+               <n-tag size="small" :bordered="false" type="warning">
+                 耗时: {{ recipe.时间 }}s
+               </n-tag>
+               <n-text depth="3">
+                 {{ 格式化配方物品(recipe.输入) }} 
+                 <span style="margin: 0 4px;">⮕</span> 
+                 {{ 格式化配方物品(recipe.输出) }}
+               </n-text>
+            </n-flex>
+          </div>
 
           <div 
              v-for="machineId in 获取可用机器ID列表(recipe.类型)" 
              :key="machineId"
-             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: #f9f9f9; padding: 8px; border-radius: 4px;"
+             style="margin-bottom: 12px; border: 1px solid #eee; border-radius: 8px; padding: 12px;"
           >
-            <div>
-               <n-text strong>{{ 获取物品数据(machineId).名称 }}</n-text>
-               <n-text depth="3" style="font-size: 12px; margin-left: 8px;">
-                 (空闲: {{ Math.floor(查询库存(machineId)) }})
+            <n-flex justify="space-between" align="center" style="margin-bottom: 12px;">
+               <n-text strong style="font-size: 15px;">
+                 {{ 获取物品数据(machineId).名称 }}
                </n-text>
-            </div>
+               <n-tag size="small" :bordered="false" type="info">
+                 空闲: {{ Math.floor(查询库存(machineId)) }}
+               </n-tag>
+            </n-flex>
 
-            <!-- 分配建筑 -->
-            <n-button-group size="tiny">
-              <n-button @click="减少配方分配建筑数量(recipe.id, machineId, 1*倍率)">-</n-button>
+            <n-flex justify="space-between" align="center">
               
-              <div style="padding: 0 12px; background: white; border: 1px solid #eee; display: flex; align-items: center; justify-content: center;">
-                 {{ 格式化数字(查询配方分配(recipe.id, machineId)) }}
+              <div style="width: 80px;"> <n-button 
+                  v-if="查询配方分配数量(recipe.id, machineId) > 0"
+                  size="small"
+                  secondary
+                  :type="查询配方建筑状态(recipe.id, machineId) === '运行' ? 'success' : 'error'"
+                  @click="切换建筑状态(recipe.id, machineId)"
+                  style="width: 100%;"
+                >
+                  {{ 查询配方建筑状态(recipe.id, machineId) === '运行' ? '运行中' : '已停工' }}
+                </n-button>
               </div>
-              
-              <n-button @click="增加配方分配建筑数量(recipe.id, machineId, 1*倍率)">+</n-button>
-            </n-button-group>
+
+              <n-button-group size="small">
+                <n-button @click="减少配方分配建筑数量(recipe.id, machineId, 1*倍率)">-</n-button>
+                <div style="min-width: 40px; padding: 0 8px; background: white; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                   {{ 格式化数字(查询配方分配数量(recipe.id, machineId)) }}
+                </div>
+                <n-button @click="增加配方分配建筑数量(recipe.id, machineId, 1*倍率)">+</n-button>
+              </n-button-group>
+
+            </n-flex>
 
           </div>
 
@@ -61,7 +85,7 @@
 <script setup>
 import { computed,ref,watch} from 'vue';
 import { 获取所有配方列表, 获取所有建筑列表, 获取物品数据 } from '../../pei_zhi_shu_ju.js';
-import {增加配方分配建筑数量,减少配方分配建筑数量, 查询配方分配,  查询库存 } from '@/dong_tai_shu_ju.js';
+import {增加配方分配建筑数量,减少配方分配建筑数量, 查询配方分配数量, 查询库存,查询配方建筑状态,切换建筑状态 } from '@/dong_tai_shu_ju.js';
 import { 格式化数字 } from '@/gong_ju.js';
 
 

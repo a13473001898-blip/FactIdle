@@ -1,5 +1,5 @@
 import { computed } from "vue";
-import { 查询配方分配, 游戏数据 } from "./dong_tai_shu_ju";
+import { 查询配方分配数量, 游戏数据 } from "./dong_tai_shu_ju";
 import {配置数据,物品类型, 获取所有物品列表 } from "./pei_zhi_shu_ju";
 import { 配方 as 配方配置 } from "./pei_zhi_shu_ju";
 

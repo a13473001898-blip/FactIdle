@@ -6,6 +6,7 @@ import Wu_pin_lan from './components/wu_pin_lan.vue';
 
 import { 获取所有物品列表,物品类型} from './pei_zhi_shu_ju.js';
 import { 更新全局速率, 游戏数据,启动游戏循环, 查询库存, 查询速率 } from './dong_tai_shu_ju.js';
+import { 启动自动存档, 读档 } from './cun_du_dang';
 
 
 
@@ -27,6 +28,8 @@ watch(
 )
 
 onMounted(() => {
+  读档()
+  启动自动存档()
   启动游戏循环();
 });
 
@@ -60,9 +63,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* 当卡片被点击时，稍微缩小一点点，模拟按压效果 */
-.物品卡片:active {
-  transform: scale(0.95);
-  transition: transform 0.1s;
-}
+
 </style>
