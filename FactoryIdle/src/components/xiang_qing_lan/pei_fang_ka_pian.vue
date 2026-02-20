@@ -42,7 +42,7 @@
           >
             <n-flex justify="space-between" align="center" style="margin-bottom: 12px;">
                <n-text strong style="font-size: 15px;">
-                 {{ 获取物品数据(machineId).名称 }}
+                 {{ 获取物品数据(machineId)?.名称 || machineId }}
                </n-text>
                <n-tag size="small" :bordered="false" type="info">
                  空闲: {{ Math.floor(查询库存(machineId)) }}
