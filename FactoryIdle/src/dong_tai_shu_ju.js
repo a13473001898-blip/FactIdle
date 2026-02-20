@@ -1,5 +1,5 @@
 import { reactive, computed, toRefs } from "vue";
-
+import { 结算科研最大预期, 推进实际科研进度 } from "./ke_ji_xi_tong.js";
 import { 获取建筑数据, 获取所有物品列表, 获取配方数据 } from './pei_zhi_shu_ju.js';
 import { 运行能源系统 } from "./neng_yuan_xi_tong.js";
 
@@ -20,8 +20,29 @@ export const 游戏数据 = reactive({
     能源网络 : {
 
     },
+
+    科技系统: {
+        已解锁列表: ['chu_shi_ke_ji'], 
+        
+        当前研发: {
+            科技ID: null,      // 当前正在研究的科技
+            已完成比例: 0,     // 当前的进度数值
+            每秒进度比例: 0    // 给 UI 进度条显示速率用的缓存值
+        }
+    }
 })
 
+// 自动推导当前可用的配方列表
+export const 动态可用配方 = computed(() => {
+    const 配方Set = new Set();
+    for (const techId of 游戏数据.科技系统.已解锁列表) {
+        const 科技 = 获取科技数据(techId);
+        if (科技 && 科技.解锁配方) {
+            科技.解锁配方.forEach(id => 配方Set.add(id));
+        }
+    }
+    return Array.from(配方Set);
+});
 
 //  =================工厂函数=================
 
@@ -169,7 +190,6 @@ export function 查询配方分配建筑的能源类型(能源类型) {
         //根据配方id遍历配方下的建筑
         for (const 建筑ID in 游戏数据.配方分配[配方ID]) {
             
-            //获取并保存建筑的配置数据
             const 建筑数据= 获取建筑数据(建筑ID)
             //筛选符合能源类型的建筑
             if (建筑数据 && 建筑数据.能源类型 === 能源类型) {
@@ -258,7 +278,7 @@ export function 更新全局速率() {
 
     游戏数据.能源网络 = 能源结算结果.能源数据;
 
-    for (const 物品id in 消耗账单) {
+    for (const 物品id in 消耗清单) {
         if (!临时速率表[物品id]) {
             临时速率表[物品id] = { 产出: 0, 消耗: 0, 净值: 0 };
         }
@@ -311,6 +331,8 @@ export function 更新全局速率() {
         }
     }
 
+    结算科研最大预期(临时速率表, 能源结算结果.能源数据);
+
     // 3. 计算净值并写入全局数据
     for (const key in 临时速率表) {
         const item = 临时速率表[key];
@@ -332,6 +354,8 @@ export function 启动游戏循环() {
         const 过去的时间秒 = 现在时间 / 1000 - 上次时间 / 1000
 
         if (现在时间 > 上次时间) {
+
+            推进实际科研进度(过去的时间秒);
             for (const id in 游戏数据.速率) {
 
                 const 净值速率 = 游戏数据.速率[id].净值
