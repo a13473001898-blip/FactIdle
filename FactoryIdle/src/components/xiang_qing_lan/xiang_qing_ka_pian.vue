@@ -20,13 +20,17 @@
           :disabled="正在生产"
           @click="开始生产"
         >
-          {{ 正在生产 ? `剩余 ${(剩余时间).toFixed(1)}s` : '手动生产' }}
+          {{ 正在生产 ? '制造中...' : '手动生产' }}
         </n-button>
 
       </n-flex>
     </template>
 
     <div v-if="正在生产" style="padding: 0 24px; margin-top: -12px; margin-bottom: 12px;">
+      <n-flex justify="space-between" align="center" style="margin-bottom: 4px; font-size: 12px;">
+        <n-text depth="3" type="primary">剩余 {{ (剩余时间).toFixed(1) }}s</n-text>
+      </n-flex>
+      
       <n-progress 
         type="line" 
         :percentage="进度百分比" 
@@ -62,7 +66,7 @@
 
         <n-text depth="3" style="font-size: 12px;">
           占用空间: {{ 物品信息?.字节 }} 字节<br>
-          生产耗时: {{ 获取配方数据(props.id + '_r')?.时间 }}秒
+          生产耗时: {{ 生产配方?.时间 }}秒
         </n-text>
 
         <n-divider v-if="物品信息?.类型 === '建筑'" />
@@ -91,7 +95,7 @@
 import { computed, ref, watch } from 'vue';
 // 引入数据源
 import { 获取物品数据, 获取配方数据, 获取建筑数据, 获取所有配方列表} from '../../pei_zhi_shu_ju.js';
-import { 查询库存, 查询速率, } from '../../dong_tai_shu_ju.js';
+import { 库存增加, 库存检查, 查询库存, 查询速率, } from '../../dong_tai_shu_ju.js';
 import { 执行配方生产 } from '../../dong_tai_shu_ju.js';
 import { 格式化数字 } from '@/gong_ju.js';
 
@@ -142,6 +146,12 @@ const 开始生产 = () => {
   // 1. 第一步：防御性判断
   // 如果没有配方，或者已经在生产了，直接 return
   if ( !生产配方.value || 正在生产.value ) return;
+
+  if (!库存检查(生产配方.value.输入, 1)) {
+    // 这里未来可以接 naive-ui 的 message.warning('材料不足') 提示给玩家
+    console.warn("材料不足，无法制造！"); 
+    return; 
+  }
 
   // 2. 第二步：计算时间锚点
   // 拿到总耗时（秒），算出开始时间戳和预计结束时间戳

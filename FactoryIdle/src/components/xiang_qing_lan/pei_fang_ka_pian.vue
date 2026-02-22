@@ -99,7 +99,7 @@ const 可用配方列表 = computed(() => {
   if (!props.itemId) return [];
   // 逻辑：遍历所有配方，返回输出包含 props.itemId 的配方
   return Object.values(获取所有配方列表()).filter(r => 
-      r.输出 && r.输出.some(out => out.id === props.itemId)
+      r.输出 && r.输出.some(out => out.id === props.itemId) || (props.itemId === '实验室' && r.id === 'lab_run')
   );
 });
 

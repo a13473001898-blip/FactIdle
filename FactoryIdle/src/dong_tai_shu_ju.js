@@ -1,12 +1,15 @@
 import { reactive, computed, toRefs } from "vue";
 import { 结算科研最大预期, 推进实际科研进度 } from "./ke_ji_xi_tong.js";
-import { 获取建筑数据, 获取所有物品列表, 获取配方数据 } from './pei_zhi_shu_ju.js';
+import { 获取建筑数据, 获取所有物品列表, 获取配方数据, 获取科技数据, 获取物品数据 } from './pei_zhi_shu_ju.js';
 import { 运行能源系统 } from "./neng_yuan_xi_tong.js";
 
 export const 游戏数据 = reactive({
     库存: {
-        kuang_ji: 5,
-        zu_zhuang_ji: 5
+        kuang_ji: 5000,
+        zu_zhuang_ji: 5000,
+        shi_lu: 5000,
+        guo_lu : 5000,
+        shi_yan_shi: 5000
     },
 
     配方分配: {
@@ -17,12 +20,12 @@ export const 游戏数据 = reactive({
 
     },
 
-    能源网络 : {
-
+    能源系统 : {
+        
     },
 
     科技系统: {
-        已解锁列表: ['chu_shi_ke_ji'], 
+        已解锁列表: ['chu_shi_ke_ji_t'], 
         
         当前研发: {
             科技ID: null,      // 当前正在研究的科技
@@ -83,16 +86,22 @@ export function 库存增加(id, 数量, 倍率 = 1) {
     if (!游戏数据.库存[id]) 游戏数据.库存[id] = 0
 
     //库存上限判断
-
+    const 之前的库存 = 游戏数据.库存[id];
     游戏数据.库存[id] += 数量 * 倍率
+
+    if (之前的库存 <= 0 && 游戏数据.库存[id] > 0) {
+        更新全局速率(); 
+    }
 }
 
 export function 库存减少(id, 数量, 倍率 = 1) {
     if (数量 < 0) return false
     if (!游戏数据.库存[id]) 游戏数据.库存[id] = 0
 
-    if (游戏数据.库存[id] < 数量) return false
-    游戏数据.库存[id] -= 数量 * 倍率
+    const 实际减少量 = 数量 * 倍率
+
+    if (游戏数据.库存[id] < 实际减少量) return false
+    游戏数据.库存[id] -= 实际减少量
     return true
 }
 
@@ -155,18 +164,26 @@ export function 查询配方分配数量(配方id, 建筑id) {
 }
 
 export const 增加配方分配建筑数量 = (配方id, 建筑id, 数量) => {
-    if (!库存减少(建筑id, 数量)) return;
-
-    初始化配方分配数据(配方id, 建筑id)
-    游戏数据.配方分配[配方id][建筑id].数量 += 数量
-
+    
+    const 当前库存 = 查询库存(建筑id) || 0;
+    const 实际增加数量 = Math.min(数量, 当前库存);
+    if (实际增加数量 <= 0) return;
+    if (!库存减少(建筑id, 实际增加数量)) return;
+    初始化配方分配数据(配方id, 建筑id);
+    游戏数据.配方分配[配方id][建筑id].数量 += 实际增加数量;
 }
 
-export function 减少配方分配建筑数量(配方id, 建筑id, 数量) {
-    if (查询配方分配数量(配方id, 建筑id) < 数量) return;
-    游戏数据.配方分配[配方id][建筑id].数量 -= 数量
 
-    库存增加(建筑id, 数量)
+
+export function 减少配方分配建筑数量(配方id, 建筑id, 数量) {
+    const 当前配方下的建筑 =  查询配方分配数量(配方id, 建筑id);
+    const 实际减少数量 = Math.min(数量, 当前配方下的建筑)
+    if (实际减少数量 <= 0) return
+
+    游戏数据.配方分配[配方id][建筑id].数量 -= 实际减少数量
+    库存增加(建筑id, 实际减少数量)
+
+
 
     if (游戏数据.配方分配[配方id][建筑id].数量 <= 0) {
         delete 游戏数据.配方分配[配方id][建筑id];
@@ -179,8 +196,7 @@ export function 减少配方分配建筑数量(配方id, 建筑id, 数量) {
  * @returns {Object} 返回一个字典，{
  *                      运行数量: 0,
  *                      停止数量: 0,
- *                      能耗: 建筑能耗 || 0
- *                  }
+ *                      能耗: 建筑能耗 || 0}
  */
 export function 查询配方分配建筑的能源类型(能源类型) {
     //定义一个输出容器
@@ -243,8 +259,10 @@ export function 执行配方生产(配方ID, 倍率 = 1) {
     if (!配方) return { success: false, msg: '配方不存在' };
 
     // --- 第一阶段：检查原料 (Check Phase) ---
-    if (!库存检查(配方.输入)) {
-        return { success: false, msg: `${原料.id} 原料不足` };
+    if (!库存检查(配方.输入, 倍率)) {
+        const 缺少原料 = 配方.输入.find(({ id, 数量 }) => 查询库存(id) < 数量 * 倍率);
+        const 缺少原料名称 = 获取物品数据(缺少原料?.id)?.名称 || 缺少原料?.id || '未知原料';
+        return { success: false, msg: `${缺少原料名称} 原料不足` };
     }
 
     // --- 第二阶段：执行扣除 (Deduct Phase) ---
@@ -276,8 +294,6 @@ export function 更新全局速率() {
         临时速率表[key] = { 产出: 0, 消耗: 0, 净值: 0 };
     }
 
-    游戏数据.能源网络 = 能源结算结果.能源数据;
-
     for (const 物品id in 消耗清单) {
         if (!临时速率表[物品id]) {
             临时速率表[物品id] = { 产出: 0, 消耗: 0, 净值: 0 };
@@ -291,6 +307,19 @@ export function 更新全局速率() {
         const 分配情况 = 游戏数据.配方分配[配方ID];
         const 当前配方 = 获取配方数据(配方ID);
 
+        let 原料足够 = true;
+        for (const 原料 of 当前配方.输入) {
+            if ((游戏数据.库存[原料.id] || 0) <= 0) {
+                原料足够 = false;
+                break; // 只要有一个原料没货，就认定停工
+            }
+        }
+
+        if (!原料足够) {
+            continue; 
+        }
+
+
         // 2.1 算出这个配方下的“总生产力” (总生产速度)
         let 总生产速度 = 0;
         for (const 建筑ID in 分配情况) {
@@ -299,13 +328,13 @@ export function 更新全局速率() {
             const 建筑 = 获取建筑数据(建筑ID);
             const 数量 = 分配情况[建筑ID].数量;
             const 单个速度 = 获取建筑数据(建筑ID)?.速度 || 0;
-            let 机器实际供应率 = 1
+            let 机器实际负载率 = 1
 
             if (建筑.能源类型 && 建筑.能源类型 !== '无') {
-                机器实际供应率 = 能源结算结果.能源数据[建筑.能源类型]?.供应率 || 0;
+                机器实际负载率 = 游戏数据.能源系统[建筑.能源类型]?.负载率 || 0;
             }
 
-            const 实际机器速度 = 单个速度 * 机器实际供应率
+            const 实际机器速度 = 单个速度 * 机器实际负载率
 
             总生产速度 += 数量 * 实际机器速度;
 
@@ -331,7 +360,7 @@ export function 更新全局速率() {
         }
     }
 
-    结算科研最大预期(临时速率表, 能源结算结果.能源数据);
+    结算科研最大预期(临时速率表, 游戏数据.能源系统);
 
     // 3. 计算净值并写入全局数据
     for (const key in 临时速率表) {
@@ -353,14 +382,19 @@ export function 启动游戏循环() {
         const 现在时间 = Date.now();
         const 过去的时间秒 = 现在时间 / 1000 - 上次时间 / 1000
 
+        if (过去的时间秒 > 1) {
+            过去的时间秒 = 1; 
+        }
+
         if (现在时间 > 上次时间) {
 
             推进实际科研进度(过去的时间秒);
+            let 需要重新计算速率 = false
             for (const id in 游戏数据.速率) {
 
                 const 净值速率 = 游戏数据.速率[id].净值
                 if (净值速率 === 0) continue;
-
+                const 当前库存 = 游戏数据.库存[id] || 0
                 const 增加量 = 净值速率 * 过去的时间秒
 
                 if (游戏数据.库存[id] === undefined) {
@@ -368,12 +402,16 @@ export function 启动游戏循环() {
                 }
                 const 预计库存 = 游戏数据.库存[id] + 增加量
 
-                if (预计库存 < 0) {
+                if (预计库存 < 0 && 当前库存 > 0) {
                     游戏数据.库存[id] = 0
+                    需要重新计算速率 = true
                 } else {
                     游戏数据.库存[id] = 预计库存
                 }
             }
+            if (需要重新计算速率) {
+                更新全局速率();}
+            
         }
 
         上次时间 = 现在时间;
@@ -383,3 +421,5 @@ export function 启动游戏循环() {
     // 第一次启动
     loop();
 }
+
+
