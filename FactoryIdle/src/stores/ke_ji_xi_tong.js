@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { 游戏数据, } from "../dong_tai_shu_ju.js";
 import { 获取建筑数据, 获取科技数据,科技配置 } from "../pei_zhi_shu_ju.js";
 import { use库存 } from '@/stores/ku_cun.js';
 import { use配方分配 } from '@/stores/pei_fang_fen_pei.js';
