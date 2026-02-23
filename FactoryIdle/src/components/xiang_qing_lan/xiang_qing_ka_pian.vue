@@ -53,7 +53,7 @@
             </n-statistic>
           </n-col>
           <n-col :span="12">
-            <n-statistic label="产出">
+            <n-statistic label="净值">
               <template #suffix>/s</template>
               <span :style="{ color: 动态信息.速率 > 0 ? '#18a058' : (动态信息.速率 < 0 ? '#d03050' : '') }">
                 {{ 动态信息.速率 > 0 ? '+' : '' }}{{ 格式化数字(动态信息.速率) }}
@@ -63,6 +63,20 @@
         </n-row>
 
         <n-divider />
+
+        <n-flex justify="space-between" align="center" style="font-size: 13px;">
+          <n-text depth="3">产出：<span style="color: #18a058;">+{{ 格式化数字(动态信息.产出) }}/s</span></n-text>
+          
+          <n-text depth="3">需求：
+            <span :style="{ color: 动态信息.需求 > 动态信息.产出 ? '#d03050' : '' }">
+              -{{ 格式化数字(动态信息.需求) }}/s
+            </span>
+          </n-text>
+        </n-flex>
+
+        <n-alert v-if="动态信息.需求 > 动态信息.产出 && 动态信息.库存 <= 0" title="产能不足！" type="warning" size="small" style="margin-top: 8px;">
+          当前产出无法满足需求，下游建筑已自动降速运行。
+        </n-alert>
 
         <n-text depth="3" style="font-size: 12px;">
           占用空间: {{ 物品信息?.字节 }} 字节<br>
@@ -95,9 +109,13 @@
 import { computed, ref, watch } from 'vue';
 // 引入数据源
 import { 获取物品数据, 获取配方数据, 获取建筑数据, 获取所有配方列表} from '../../pei_zhi_shu_ju.js';
-import { 库存增加, 库存检查, 查询库存, 查询速率, } from '../../dong_tai_shu_ju.js';
 import { 执行配方生产 } from '../../dong_tai_shu_ju.js';
 import { 格式化数字 } from '@/gong_ju.js';
+import { use库存 } from '@/stores/ku_cun.js'
+import { use全局速率 } from '@/stores/su_lv.js'
+
+const 库存 = use库存();
+const 全局速率 = use全局速率()
 
 const props = defineProps({
   id: { type: String, default: null }
@@ -109,10 +127,15 @@ const props = defineProps({
 
 const 物品信息 = computed(() => props.id ? 获取物品数据(props.id) : {});
 const 动态信息 = computed(() => {
-  if (!props.id) return { 库存: 0, 速率: 0 };
+  if (!props.id) return { 库存: 0, 速率: 0, 需求: 0, 产出: 0 };
+  const rateData = 全局速率.查询速率(props.id)
   return {
-    库存: 查询库存(props.id),
-    速率: 查询速率(props.id,'净值')
+    库存: 库存.查询库存(props.id),
+    速率: 全局速率.查询速率(props.id,'净值'),
+    产出: 全局速率.查询速率(props.id,'产出'),
+    需求: 全局速率.查询速率(props.id,'需求'),
+    消耗: 全局速率.查询速率(props.id,'消耗'),
+    净值: 全局速率.查询速率(props.id,'净值'),
   };
 });
 
@@ -147,7 +170,7 @@ const 开始生产 = () => {
   // 如果没有配方，或者已经在生产了，直接 return
   if ( !生产配方.value || 正在生产.value ) return;
 
-  if (!库存检查(生产配方.value.输入, 1)) {
+  if (!库存.库存检查(生产配方.value.输入, 1)) {
     // 这里未来可以接 naive-ui 的 message.warning('材料不足') 提示给玩家
     console.warn("材料不足，无法制造！"); 
     return; 
@@ -211,7 +234,7 @@ const 完成生产 = () => {
   // 延迟 200毫秒 后，把进度条归零，准备下一次
   setTimeout(() => { 
     进度百分比.value = 0; 
-  }, 1);
+  }, 200);
 };
 
 

@@ -45,30 +45,30 @@
                  {{ 获取物品数据(machineId)?.名称 || machineId }}
                </n-text>
                <n-tag size="small" :bordered="false" type="info">
-                 空闲: {{ Math.floor(查询库存(machineId)) }}
+                 空闲: {{ Math.floor(库存.查询库存(machineId)) }}
                </n-tag>
             </n-flex>
 
             <n-flex justify="space-between" align="center">
               
               <div style="width: 80px;"> <n-button 
-                  v-if="查询配方分配数量(recipe.id, machineId) > 0"
+                  v-if="配方分配.查询分配数量(recipe.id, machineId) > 0"
                   size="small"
                   secondary
-                  :type="查询配方建筑状态(recipe.id, machineId) === '运行' ? 'success' : 'error'"
-                  @click="切换建筑状态(recipe.id, machineId)"
+                  :type="配方分配.查询建筑状态(recipe.id, machineId) === '运行' ? 'success' : 'error'"
+                  @click="配方分配.切换建筑状态(recipe.id, machineId)"
                   style="width: 100%;"
                 >
-                  {{ 查询配方建筑状态(recipe.id, machineId) === '运行' ? '运行中' : '已停工' }}
+                  {{ 配方分配.查询建筑状态(recipe.id, machineId) === '运行' ? '运行中' : '已停工' }}
                 </n-button>
               </div>
 
               <n-button-group size="small">
-                <n-button @click="减少配方分配建筑数量(recipe.id, machineId, 1*倍率)">-</n-button>
+                <n-button @click="配方分配.减少分配数量(recipe.id, machineId, 1*倍率)">-</n-button>
                 <div style="min-width: 40px; padding: 0 8px; background: white; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                   {{ 格式化数字(查询配方分配数量(recipe.id, machineId)) }}
+                   {{ 格式化数字(配方分配.查询分配数量(recipe.id, machineId)) }}
                 </div>
-                <n-button @click="增加配方分配建筑数量(recipe.id, machineId, 1*倍率)">+</n-button>
+                <n-button @click="配方分配.增加分配数量(recipe.id, machineId, 1*倍率)">+</n-button>
               </n-button-group>
 
             </n-flex>
@@ -84,9 +84,12 @@
 
 <script setup>
 import { computed,ref,watch} from 'vue';
-import { 获取所有配方列表, 获取所有建筑列表, 获取物品数据 } from '../../pei_zhi_shu_ju.js';
-import {增加配方分配建筑数量,减少配方分配建筑数量, 查询配方分配数量, 查询库存,查询配方建筑状态,切换建筑状态 } from '@/dong_tai_shu_ju.js';
+import { 获取所有配方列表, 获取所有建筑列表, 获取物品数据, 物品ID } from '../../pei_zhi_shu_ju.js';
 import { 格式化数字 } from '@/gong_ju.js';
+import { use库存 } from '@/stores/ku_cun.js'
+import { use配方分配 } from '@/stores/pei_fang_fen_pei.js';
+const 配方分配 = use配方分配();
+const 库存 = use库存();
 
 
 const props = defineProps(['itemId']);
@@ -99,7 +102,7 @@ const 可用配方列表 = computed(() => {
   if (!props.itemId) return [];
   // 逻辑：遍历所有配方，返回输出包含 props.itemId 的配方
   return Object.values(获取所有配方列表()).filter(r => 
-      r.输出 && r.输出.some(out => out.id === props.itemId) || (props.itemId === '实验室' && r.id === 'lab_run')
+      r.输出 && r.输出.some(out => out.id === props.itemId) || (props.itemId === 物品ID.实验室 && r.id === 'lab_run')
   );
 });
 

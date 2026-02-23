@@ -1,22 +1,11 @@
 <template>
-    <n-collapse :default-expanded-names="['资源','原材料','零部件','建筑']">
+    <n-collapse :default-expanded-names="['资源', '原材料', '零部件', '建筑']">
 
-        <n-collapse-item
-            v-for="组 in 分组后的物品列表"
-            :key="组.标题"
-            :title="组.标题"
-            :name="组.标题"
-        >
+        <n-collapse-item v-for="组 in 分组后的物品列表" :key="组.标题" :title="组.标题" :name="组.标题">
 
-            <n-flex >
-                <wu_pin_ka_pian
-                    v-for="物品 in 组.列表"
-                    :key="物品.id"
-                    :id="物品.id"
-                    class="物品卡片"
-                    :名称="物品.名称"
-                    @action="点击物品卡片(物品.id)"
-                    />
+            <n-flex>
+                <wu_pin_ka_pian v-for="物品 in 组.列表" :key="物品.id" :id="物品.id" class="物品卡片" :名称="物品.名称"
+                    @action="点击物品卡片(物品.id)" />
             </n-flex>
 
         </n-collapse-item>
@@ -27,37 +16,43 @@
 <script setup>
 import { computed } from 'vue';
 import Wu_pin_ka_pian from './wu_pin_ka_pian.vue';
-import { 物品类型, 获取所有物品列表,物品ID} from '@/pei_zhi_shu_ju';
+import { 物品类型, 获取所有物品列表, 物品ID } from '@/pei_zhi_shu_ju';
+import { use库存 } from '@/stores/ku_cun.js';
+
+const 库存 = use库存()
 
 const emit = defineEmits(['发送物品id'])
 
 const 点击物品卡片 = (id) => {
-    emit('发送物品id',id)
+    emit('发送物品id', id)
 }
 
 const 分类名称列表 = Object.values(物品类型)
 const 物品数组 = Object.values(获取所有物品列表())
 
 const 分组后的物品列表 = computed(() => {
-  return 分类名称列表.map( (当前分类) => {
-      const 物品组 = 物品数组.filter( (物品) => {
-          return 物品.类型 === 当前分类; 
-      });
+    return 分类名称列表.map((当前分类) => {
 
-      // ★ 【新增逻辑】：如果是能源分类，强行把煤炭塞进去
-      if (当前分类 === '能源') {
-          const 煤炭 = 物品数组.find(w => w.id === 物品ID.煤炭);
-          // 确保找到了，且还没塞进去，才推入数组
-          if (煤炭 && !物品组.some(w => w.id === 物品ID.煤炭)) {
-              物品组.push(煤炭);
-          }
-      }
 
-      return {
-          标题: 当前分类,
-          列表: 物品组
-      };
-  });
+        const 物品组 = 物品数组.filter((物品) => {
+            return 物品.类型 === 当前分类;
+        });
+
+        if (当前分类 === '能源') {
+            const 煤炭 = 物品数组.find(w => w.id === 物品ID.煤炭);
+            // 确保找到了，且还没塞进去，才推入数组
+            if (煤炭 && !物品组.some(w => w.id === 物品ID.煤炭)) {
+                物品组.push(煤炭);
+            }
+        }
+
+
+
+        return {
+            标题: 当前分类,
+            列表: 物品组
+        };
+    });
 });
 
 </script>
@@ -65,7 +60,7 @@ const 分组后的物品列表 = computed(() => {
 <style scoped>
 /* 当卡片被点击时，稍微缩小一点点，模拟按压效果 */
 .物品卡片:active {
-  transform: scale(0.95);
-  transition: transform 0.1s;
+    transform: scale(0.95);
+    transition: transform 0.1s;
 }
 </style>

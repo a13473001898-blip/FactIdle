@@ -29,9 +29,13 @@
 </template>
 
 <script setup>
-import { 查询库存,查询速率 } from '@/dong_tai_shu_ju';
 import { 格式化数字 } from '@/gong_ju';
 import { computed } from 'vue';
+import { use库存 } from '@/stores/ku_cun.js'
+import { use全局速率 } from '@/stores/su_lv.js'
+
+const 全局速率 = use全局速率()
+const 库存 = use库存();
 
 // 1. 定义组件需要接收的参数
 const props = defineProps({
@@ -39,8 +43,8 @@ const props = defineProps({
     名称: { type: String, default: '未知物品' }, // 对应：配置数据.物品.xx.名称
 });
 
-const 数量 = computed(() => 查询库存(props.id))
-const 速率 = computed(() => 查询速率(props.id,'净值'))
+const 数量 = computed(() => 库存.查询库存(props.id))
+const 速率 = computed(() => 全局速率.查询速率(props.id,'净值'))
 
 // 2. 定义组件向外发送的事件
 const emit = defineEmits(['action']);
