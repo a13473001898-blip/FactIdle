@@ -1,18 +1,21 @@
 <script setup>
-import { onMounted, watch, ref, computed, h } from 'vue';
+import { onMounted, watch, ref, computed, h, provide } from 'vue';
 
-import Xiang_qing_lan from './components/xiang_qing_lan/index.vue';
-import Wu_pin_lan from './components/wu_pin_lan.vue';
-
+import Wu_pin_lan from './components/wu_pin_xi_tong/wu_pin_lan.vue';
+import Wu_pin_xiang_qing from './components/wu_pin_xi_tong/wu_pin_xiang_qing.vue';
+import Ding_bu from './components/kuang_jia/ding_bu.vue';
+import Ke_ji_lan from './components/ke_ji_xi_tong/ke_ji_lan.vue';
+import Ke_ji_xiang_qing from './components/ke_ji_xi_tong/ke_ji_xiang_qing.vue';
 
 import { 科技配置, 获取科技数据, 获取物品数据 } from './pei_zhi_shu_ju.js';
-import {启动游戏循环 } from './dong_tai_shu_ju.js';
+import { 启动游戏循环 } from './dong_tai_shu_ju.js';
 import { 启动自动存档, 读档 } from './cun_du_dang';
-import { use科技系统,} from './stores/ke_ji_xi_tong.js';
+import { use科技系统, } from './stores/ke_ji_xi_tong.js';
 import { 格式化数字 } from './gong_ju.js';
 import { use能源模块 } from '@/stores/neng_yuan_xi_tong.js'
 import { use配方分配 } from '@/stores/pei_fang_fen_pei.js';
 import { use全局速率 } from '@/stores/su_lv.js'
+
 
 
 const 配方分配 = use配方分配();
@@ -24,9 +27,20 @@ const 全局速率 = use全局速率()
 const dq_xuan_ze_id = ref(null);
 
 const handleAction = (id) => {
-  console.log('选中了:', id);
-  dq_xuan_ze_id.value = id; // 更新选中的ID，右侧详情栏会自动刷新
+  dq_xuan_ze_id.value = id;
+  当前标签页.value = 'wupin'; // 强制把左侧菜单切回物品页
 };
+provide('全局跳转物品', handleAction);
+
+const dq_ke_ji_id = ref(null);
+const handleKeJiAction = (id) => {
+  dq_ke_ji_id.value = id;
+  当前标签页.value = 'keji'; // 自动切到科技页
+};
+provide('全局跳转科技', handleKeJiAction);
+
+
+
 
 watch(
   () => 配方分配.数据,
@@ -53,44 +67,16 @@ const menuOptions = [
 
 <template>
   <n-config-provider>
+
     <n-layout style="height: 100vh">
 
       <n-layout-header bordered
         style="height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; background-color: #fafafc;">
 
-        <div style="width: 300px;">
-          <n-text depth="3" v-if="!科技系统.当前研发.科技ID">
-            当前未进行研究
-          </n-text>
-          <div v-else>
-            <n-flex justify="space-between" align="center" style="margin-bottom: 2px;">
-              <n-text style="font-size: 13px; font-weight: bold;">
-                研发中: {{ 获取科技数据(科技系统.当前研发.科技ID)?.名称 }}
-              </n-text>
-              <n-text style="font-size: 12px;" depth="3">
-                {{ Math.floor((科技系统.当前研发.已完成比例 || 0) * 100) }}%
-              </n-text>
-            </n-flex>
-            <n-progress type="line" :percentage="(科技系统.当前研发.已完成比例 || 0) * 100" :show-indicator="false"
-              status="info" processing />
-          </div>
-        </div>
-
-        <n-flex gap="24px">
-          <div v-for="type in ['热能', '蒸汽', '电力']" :key="type" style="width: 140px;">
-
-            <n-flex justify="space-between" align="center" style="margin-bottom: 2px;">
-              <n-text style="font-size: 12px;" depth="2">{{ type }}负载</n-text>
-              <n-text style="font-size: 12px; font-family: monospace;" depth="3">
-                {{ 格式化数字(能源模块.数据[type]?.需求 || 0) }} / {{ 格式化数字(能源模块.数据[type]?.供应 || 0) }}
-              </n-text>
-            </n-flex>
-
-            <n-progress type="line" :percentage="能源模块.获取能源负载百分比(type)" :show-indicator="false" :status="能源模块.获取能源状态颜色(type)" />
-          </div>
-        </n-flex>
+        <ding_bu />
 
       </n-layout-header>
+
 
       <n-layout has-sider position="absolute" style="top: 64px; bottom: 0;">
 
@@ -106,36 +92,21 @@ const menuOptions = [
           </div>
 
           <div v-if="当前标签页 === 'keji'">
-            <h2 style="margin-bottom: 16px;">可研发科技</h2>
-            <n-empty v-if="科技系统.可研发科技列表.length === 0" description="暂无可研发的科技" />
+            <h2 style="margin-bottom: 16px;">科技研发</h2>
+            <ke_ji_lan @发送科技id="handleKeJiAction" />
+          </div>
 
-            <n-grid v-else :cols="3" x-gap="16" y-gap="16">
-              <n-grid-item v-for="科技 in 科技系统.可研发科技列表" :key="科技.id">
-                <n-card :title="科技.名称" hoverable size="small">
-                  <n-text depth="3" style="font-size: 13px;">耗时: {{ 科技.耗时 }} 秒</n-text>
-
-                  <div style="margin: 12px 0; min-height: 40px;">
-                    <n-text depth="2" style="font-size: 12px; display: block; margin-bottom: 4px;">研究消耗：</n-text>
-                    <n-tag v-for="投入 in 科技.投入" :key="投入.id" size="small" type="primary" bordered
-                      style="margin-right: 6px;">
-                      {{ 获取物品数据(投入.id)?.名称 }} x {{ 投入.数量 }}
-                    </n-tag>
-                  </div>
-
-                  <n-button block type="info" :secondary="科技系统.当前研发.科技ID !== 科技.id"
-                    :disabled="科技系统.当前研发.科技ID === 科技.id" @click="科技系统.切换当前研发科技(科技.id)">
-                    {{ 科技系统.当前研发.科技ID === 科技.id ? '正在研究中...' : '开始研究' }}
-                  </n-button>
-                </n-card>
-              </n-grid-item>
-            </n-grid>
+          <div v-if="当前标签页 === 'keji'">
           </div>
 
         </n-layout-content>
 
         <n-layout-sider width="320" collapse-mode="width" :collapsed-width="0" show-trigger="arrow-circle" bordered
           content-style="padding: 24px;">
-          <xiang_qing_lan :id="dq_xuan_ze_id" />
+
+          <wu_pin_xiang_qing v-if="当前标签页 === 'wupin'" :id="dq_xuan_ze_id" />
+          <ke_ji_xiang_qing v-show="当前标签页 === 'keji'" :id="dq_ke_ji_id" @切换科技="handleKeJiAction" />
+        
         </n-layout-sider>
 
       </n-layout>

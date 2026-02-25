@@ -1,8 +1,8 @@
 import { reactive, computed, toRefs } from "vue";
-import {use科技系统 } from "./stores/ke_ji_xi_tong.js";
+import { use科技系统 } from "./stores/ke_ji_xi_tong.js";
 import { 获取建筑数据, 获取所有物品列表, 获取配方数据, 获取科技数据, 获取物品数据 } from './pei_zhi_shu_ju.js';
-import { use能源模块,} from "./stores/neng_yuan_xi_tong.js";
-import {use库存,} from './stores/ku_cun.js';
+import { use能源模块, } from "./stores/neng_yuan_xi_tong.js";
+import { use库存, } from './stores/ku_cun.js';
 import { use配方分配 } from "./stores/pei_fang_fen_pei.js";
 import { use全局速率 } from "./stores/su_lv.js";
 
@@ -50,7 +50,7 @@ export function 启动游戏循环() {
         let 过去的时间秒 = 现在时间 / 1000 - 上次时间 / 1000
 
         if (过去的时间秒 > 1) {
-            过去的时间秒 = 1; 
+            过去的时间秒 = 1;
         }
 
         if (现在时间 > 上次时间) {
@@ -67,21 +67,27 @@ export function 启动游戏循环() {
                 if (库存.数据[id] === undefined) {
                     库存.数据[id] = 0;
                 }
-                const 预计库存 = 库存.数据[id] + 增加量
 
-                if (预计库存 <= 0 && 当前库存 > 0) {
-                    库存.数据[id] = 0
-                    需要重新计算速率 = true
-                } else if ( 预计库存 > 0 && 当前库存 <= 0 ) {
-                    库存.数据[id] = 预计库存
-                    需要重新计算速率 = true
-                } else {
-                    库存.数据[id] = 预计库存
+                let 预计库存 = 库存.数据[id] + 增加量;
+
+                //库存永远不可能小于 0
+                if (预计库存 < 0) {
+                    预计库存 = 0;
                 }
+
+                // 判断是否跨越了 0 的边界，跨越了就通知系统重新算一次账
+                if (预计库存 === 0 && 当前库存 > 0) {
+                    需要重新计算速率 = true;
+                } else if (预计库存 > 0 && 当前库存 <= 0) {
+                    需要重新计算速率 = true;
+                }
+
+                库存.数据[id] = 预计库存;
             }
             if (需要重新计算速率) {
-                全局速率.更新全局速率();}
-            
+                全局速率.更新全局速率();
+            }
+
         }
 
         上次时间 = 现在时间;

@@ -8,8 +8,9 @@
     class="物品卡片"
   >
     <n-flex justify="space-between" align="center">
+      
       <n-text strong style="font-size: 20px;">
-        {{ 名称 }}
+        <wu_pin_chao_lian_jie :id="id" />
       </n-text>
       
       <n-text 
@@ -33,6 +34,7 @@ import { 格式化数字 } from '@/gong_ju';
 import { computed } from 'vue';
 import { use库存 } from '@/stores/ku_cun.js'
 import { use全局速率 } from '@/stores/su_lv.js'
+import Wu_pin_chao_lian_jie from '../tong_yong/wu_pin_chao_lian_jie.vue';
 
 const 全局速率 = use全局速率()
 const 库存 = use库存();
