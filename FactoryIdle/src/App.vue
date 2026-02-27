@@ -42,12 +42,6 @@ provide('全局跳转科技', handleKeJiAction);
 
 
 
-watch(
-  () => 配方分配.数据,
-  全局速率.更新全局速率,
-  { deep: true, immediate: true }
-)
-
 onMounted(() => {
   读档()
   启动自动存档()

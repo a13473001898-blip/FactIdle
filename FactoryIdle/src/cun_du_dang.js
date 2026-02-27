@@ -3,6 +3,7 @@ import { use库存 } from '@/stores/ku_cun.js';
 import { use配方分配 } from '@/stores/pei_fang_fen_pei.js';
 import { use全局速率 } from '@/stores/su_lv.js'
 import { use科技系统 } from '@/stores/ke_ji_xi_tong.js'
+import { 引擎信号 } from '@/systems/quan_ju_xin_hao';
 
 
 
@@ -37,7 +38,7 @@ export const 读档 = (data) => {
     if(存档对象.科技系统) {
         Object.assign(科技系统.$state, 存档对象.科技系统)
     }
-    全局速率.更新全局速率()
+    引擎信号.需要重新结算 = true;
 }
 
 export const 启动自动存档 = () => {

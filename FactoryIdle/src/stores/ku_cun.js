@@ -1,6 +1,7 @@
 
 import { defineStore } from 'pinia'
 import { use全局速率 } from './su_lv'
+import { 引擎信号 } from '@/systems/quan_ju_xin_hao';
 
 
 export const use库存 = defineStore('ku_cun', {
@@ -29,7 +30,7 @@ export const use库存 = defineStore('ku_cun', {
             this.数据[id] += 数量 * 倍率
 
             if (之前的库存 <= 0 && this.数据[id] > 0) {
-                全局速率.更新全局速率();
+                引擎信号.需要重新结算 = true;;
             }
             
         },
