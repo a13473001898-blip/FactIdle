@@ -1,9 +1,9 @@
 
 import { use库存 } from '@/stores/ku_cun.js';
 import { use配方分配 } from '@/stores/pei_fang_fen_pei.js';
-import { use全局速率 } from '@/stores/su_lv.js'
 import { use科技系统 } from '@/stores/ke_ji_xi_tong.js'
 import { 引擎信号 } from '@/systems/quan_ju_xin_hao';
+import { use计算机系统 } from '@/stores/ji_suan_ji_xi_tong.js';
 
 
 
@@ -11,32 +11,37 @@ export const 存档 = () => {
     const 配方分配 = use配方分配();
     const 科技系统 = use科技系统()
     const 库存 = use库存()
+    const 计算机系统 = use计算机系统();
     const data = {
-        库存 : 库存.数据,
-        配方分配 : 配方分配.数据,
+        库存: 库存.数据,
+        配方分配: 配方分配.数据,
         科技系统: 科技系统.$state,
+        计算机系统: 计算机系统.$state,
     }
 
-    localStorage.setItem('存档字符串',JSON.stringify(data))
+    localStorage.setItem('存档字符串', JSON.stringify(data))
 
-  }
+}
 
 export const 读档 = (data) => {
-    const 全局速率 = use全局速率()
     const 科技系统 = use科技系统()
     const 配方分配 = use配方分配();
     const 库存 = use库存()
     const 存档文件 = localStorage.getItem('存档字符串')
+    const 计算机系统 = use计算机系统();
     if (存档文件 === null) return
     const 存档对象 = JSON.parse(存档文件)
-    if(存档对象.库存) {
-        Object.assign(库存.数据,存档对象.库存)
+    if (存档对象.库存) {
+        Object.assign(库存.数据, 存档对象.库存)
     }
-    if(存档对象.配方分配) {
-        Object.assign(配方分配.数据,存档对象.配方分配)
+    if (存档对象.配方分配) {
+        Object.assign(配方分配.数据, 存档对象.配方分配)
     }
-    if(存档对象.科技系统) {
+    if (存档对象.科技系统) {
         Object.assign(科技系统.$state, 存档对象.科技系统)
+    }
+    if (存档对象.计算机系统) {
+        Object.assign(计算机系统.$state, 存档对象.计算机系统); // 新增
     }
     引擎信号.需要重新结算 = true;
 }

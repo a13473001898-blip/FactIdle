@@ -2,7 +2,7 @@
   <n-card bordered content-style="padding: 0;">
     
     <template #header>
-      <n-flex justify="space-between" align="center" style="width: 100%">
+      <n-flex justify="space-between" align="center" style="width: 100%" v-memo="[id, 正在生产]">
         <n-flex align="center" size="small">
           <span style="font-size: 16px; font-weight: bold;">
             {{ 物品信息?.名称 || '未选择' }}

@@ -20,30 +20,18 @@ export const use库存 = defineStore('ku_cun', {
             return this.数据[id] || 0
         },
 
-        库存增加(id, 数量, 倍率 = 1) {
-            const 全局速率 = use全局速率()
+        库存增加(id, 数量) {
             if (数量 < 0) return
             if (!this.数据[id]) this.数据[id] = 0
-
-            //库存上限判断
-            const 之前的库存 = this.数据[id];
-            this.数据[id] += 数量 * 倍率
-
-            if (之前的库存 <= 0 && this.数据[id] > 0) {
-                引擎信号.需要重新结算 = true;;
-            }
+            this.数据[id] += 数量
             
         },
 
-        库存减少(id, 数量, 倍率 = 1) {
+        库存减少(id, 数量) {
             if (数量 < 0) return false
             if (!this.数据[id]) this.数据[id] = 0
-
-            const 实际减少量 = 数量 * 倍率
-
-            if (this.数据[id] < 实际减少量) return false
-
-            this.数据[id] -= 实际减少量
+            if (this.数据[id] < 数量) return false
+            this.数据[id] -= 数量
             return true
         },
 

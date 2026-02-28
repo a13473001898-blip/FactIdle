@@ -84,7 +84,7 @@
                 <div style="width: 60px; flex-shrink: 0; background: white; border-top: 1px solid #e0e0e6; border-bottom: 1px solid #e0e0e6; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: monospace; font-size: 14px;">
                   {{ 格式化数字(配方分配.查询分配数量(recipe.id, machineId)) }}
                 </div>
-                <n-button @click="配方分配.增加分配数量(recipe.id, machineId, 1 * 倍率)" style="width: 36px; font-weight: bold;">+</n-button>
+                <n-button @click="尝试增加分配(recipe.id, machineId, 1 * 倍率)" style="width: 36px; font-weight: bold;">+</n-button>
               </n-button-group>
             </n-flex>
 
@@ -145,6 +145,21 @@ const 获取可用机器ID列表 = (类型) => {
   return Object.values(获取所有建筑列表())
     .filter(b => b.类型 === 类型)
     .map(b => b.id);
+};
+
+import { useMessage } from 'naive-ui';
+const message = useMessage();
+
+// 新建一个拦截验证函数
+const 尝试增加分配 = (配方id, 建筑id, 期望数量) => {
+    const 之前数量 = 配方分配.查询分配数量(配方id, 建筑id);
+    const 拦截结果 = 配方分配.增加分配数量(配方id, 建筑id, 期望数量);
+    const 之后数量 = 配方分配.查询分配数量(配方id, 建筑id);
+    
+    // 如果返回false或者实际增加的比期望的少，且库存还有货，说明是算力不够被拦了
+    if (拦截结果 === false || (之后数量 - 之前数量 < 期望数量 && 库存.查询库存(建筑id) > 0)) {
+        message.warning('内存算力已达上限！请前往计算中心扩展阵列。');
+    }
 };
 </script>
 

@@ -3,7 +3,7 @@
         
         <n-collapse :default-expanded-names="['高级筛选']">
             <n-collapse-item title="筛选与追踪" name="高级筛选">
-                <div style="background-color: #fafafc; padding: 16px; border-radius: 8px; border: 1px solid #eee;">
+                <div v-memo="[选中的分类, 追踪物品ID]" style="background-color: #fafafc; padding: 16px; border-radius: 8px; border: 1px solid #eee;">
                     
                     <n-text depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">按类型筛选</n-text>
                     <n-checkbox-group v-model:value="选中的分类">

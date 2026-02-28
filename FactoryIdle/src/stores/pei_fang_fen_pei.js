@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { use库存 } from '@/stores/ku_cun.js';
 import { 获取建筑数据 } from '@/pei_zhi_shu_ju.js';
 import { 引擎信号 } from '@/systems/quan_ju_xin_hao';
+import { use计算机系统 } from '@/stores/ji_suan_ji_xi_tong.js';
 
 function 配方分配数据模板(状态 = '运行') {
     return {
@@ -74,16 +75,31 @@ export const use配方分配 = defineStore('pei_fang_fen_pei', {
 
         增加分配数量(配方id, 建筑id, 数量) {
             const 库存 = use库存()
+            const 计算机 = use计算机系统(); // 新增
+
             const 当前库存 = 库存.查询库存(建筑id) || 0;
-            const 实际增加数量 = Math.min(数量, 当前库存);
-            if (实际增加数量 <= 0) return;
-            if (!库存.库存减少(建筑id, 实际增加数量)) return;
-            
+            let 实际增加数量 = Math.min(数量, 当前库存);
+            if (实际增加数量 <= 0) return true;
+
+            // 🌟 核心拦截：计算是否触碰前端算力硬限制
+            const 建筑数据 = 获取建筑数据(建筑id);
+            const 单台算力 = 建筑数据?.内存占用 || 1;
+            if (单台算力 > 0) {
+                const 剩余算力 = Math.max(0, 计算机.总内存容量 - 计算机.已用内存容量);
+                const 算力允许最大数量 = Math.floor(剩余算力 / 单台算力);
+                实际增加数量 = Math.min(实际增加数量, 算力允许最大数量);
+
+                // 如果因为算力不足被削减到 0，直接返回 false，告诉 UI 拦截失败
+                if (实际增加数量 <= 0) return false;
+            }
+
+            if (!库存.库存减少(建筑id, 实际增加数量)) return true;
+
             this.初始化配方分配数据(配方id, 建筑id);
             this.数据[配方id][建筑id].数量 += 实际增加数量;
-            
-            // 【改动点】：不再调 store 互相更新，而是打上脏标记，交给外部主循环统一算
-            引擎信号.需要重新结算 = true;; 
+
+            引擎信号.需要重新结算 = true;
+            return true; // 返回成功
         },
 
         减少分配数量(配方id, 建筑id, 数量) {
@@ -98,7 +114,7 @@ export const use配方分配 = defineStore('pei_fang_fen_pei', {
             if (this.数据[配方id][建筑id].数量 <= 0) {
                 delete this.数据[配方id][建筑id];
             }
-            
+
             // 【改动点】：打上脏标记
             引擎信号.需要重新结算 = true;;
         },
@@ -110,7 +126,7 @@ export const use配方分配 = defineStore('pei_fang_fen_pei', {
             else {
                 建筑数据.状态 = '运行'
             }
-            
+
             // 【改动点】：打上脏标记
             引擎信号.需要重新结算 = true;
         },
