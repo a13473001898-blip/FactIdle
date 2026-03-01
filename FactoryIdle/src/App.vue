@@ -7,15 +7,19 @@ import Ding_bu from './components/kuang_jia/ding_bu.vue';
 import Ke_ji_lan from './components/ke_ji_xi_tong/ke_ji_lan.vue';
 import Ke_ji_xiang_qing from './components/ke_ji_xi_tong/ke_ji_xiang_qing.vue';
 import Ji_suan_ji_mian_ban from './components/ji_suan_ji_xi_tong/ji_suan_ji_mian_ban.vue';
+import She_zhi_mian_ban from './components/she_zhi/0_she_zhi_mian_ban.vue';
+
+import { darkTheme, useOsTheme } from 'naive-ui';
+import { use游戏设置 } from '@/stores/she_zhi.js';
 
 import { 启动游戏循环 } from './dong_tai_shu_ju.js';
 import { 启动自动存档, 读档 } from './cun_du_dang';
 import { use游戏控制 } from '@/stores/you_xi_kong_zhi.js';
-
+const 游戏设置 = use游戏设置();
 
 const 游戏控制 = use游戏控制()
 
-
+const osTheme = useOsTheme(); // 监听系统主题
 // 选择的物品
 const dq_xuan_ze_id = ref(null);
 
@@ -32,7 +36,13 @@ const handleKeJiAction = (id) => {
 };
 provide('全局跳转科技', handleKeJiAction);
 
-
+const 当前主题 = computed(() => {
+  const mode = 游戏设置.显示配置.主题模式;
+  if (mode === 'auto') {
+    return osTheme.value === 'dark' ? darkTheme : null;
+  }
+  return mode === 'dark' ? darkTheme : null;
+});
 
 
 onMounted(() => {
@@ -47,19 +57,23 @@ onMounted(() => {
 const 当前标签页 = ref('wupin');
 const menuOptions = [
   { label: '物品', key: 'wupin' },
-  { label: '科技树', key: 'keji' }
+  { label: '科技', key: 'keji' },
+  { label: '设置', key: 'shezhi' },
 ];
 
 </script>
 
 <template>
-  <n-config-provider>
+  <n-config-provider :theme="当前主题">
+    <n-global-style />
+
+    <n-dialog-provider>
     <n-message-provider>
 
       <n-layout style="height: 100vh">
 
         <n-layout-header bordered
-          style="height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; background-color: #fafafc;">
+          style="height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; ">
 
           <ding_bu />
 
@@ -72,7 +86,7 @@ const menuOptions = [
             <n-menu v-model:value="当前标签页" :options="menuOptions" />
           </n-layout-sider>
 
-          <n-layout-content style="background-color: #f0f2f5; padding: 24px;">
+          <n-layout-content style=" padding: 24px;">
 
             <div v-if="当前标签页 === 'wupin'">
               <h2 style="margin-bottom: 16px;">物品概览</h2>
@@ -84,7 +98,9 @@ const menuOptions = [
               <ke_ji_lan @发送科技id="handleKeJiAction" />
             </div>
 
-            <div v-if="当前标签页 === 'keji'">
+            <div v-if="当前标签页 === 'shezhi'" style="height: 100%;">
+              <h2 style="margin-bottom: 16px;">系统设置</h2>
+              <She_zhi_mian_ban />
             </div>
 
           </n-layout-content>
@@ -110,5 +126,6 @@ const menuOptions = [
       </n-drawer>
 
     </n-message-provider>
+</n-dialog-provider>
   </n-config-provider>
 </template>

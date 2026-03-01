@@ -22,7 +22,8 @@ import { inject } from 'vue';
 import { 获取物品数据 } from '@/pei_zhi_shu_ju.js';
 // 引入你之前做好的详情卡片
 import xiang_qing_ka_pian from '@/components/wu_pin_xi_tong/xiang_qing_ka_pian.vue';
-
+import { useThemeVars } from 'naive-ui';
+const themeVars = useThemeVars();
 const props = defineProps({
   id: { type: String, required: true }
 });
@@ -40,12 +41,12 @@ const 触发跳转 = () => {
 <style scoped>
 .item-link {
   /* 使用深橄榄绿或深森林绿，降低对比度带来的刺眼感 */
-  color: #1a7344; 
+  color: v-bind('themeVars.primaryColor'); 
   cursor: pointer;
   font-weight: 600;
   padding: 0 2px;
   /* 使用细实线，颜色比文字更浅一点，减少视觉干扰 */
-  border-bottom: 1px solid #b7dbc7; 
+  border-bottom: 1px solid v-bind('themeVars.primaryColorSuppl'); 
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-block;
   line-height: 1.2;

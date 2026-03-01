@@ -1,36 +1,50 @@
-// gong_ju.js
+import { use游戏设置 } from '@/stores/she_zhi.js';
+
+
+const 算法_标准后缀 = (num, 精度) => {
+    if (Math.abs(num) < 1000) return num.toFixed(Math.abs(num) < 10 ? 精度 : 0);
+    
+    const units = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp'];
+    const i = Math.floor(Math.log10(Math.abs(num)) / 3);
+    const val = num / Math.pow(10, i * 3);
+    
+    // 如果超出单位表范围，回退到科学计数法
+    if (i >= units.length) return num.toExponential(精度);
+    
+    return val.toFixed(精度) + units[i];
+};
+
+/** 科学计数法处理 (1.23e9) */
+const 算法_科学计数 = (num, 精度) => {
+    return num.toExponential(精度);
+};
+
+/** 工程计数法处理 (指数为3的倍数) */
+const 算法_工程计数 = (num, 精度) => {
+    const absNum = Math.abs(num);
+    if (absNum === 0) return '0';
+    if (absNum < 1000) return num.toFixed(精度);
+    
+    const exp = Math.floor(Math.log10(absNum) / 3) * 3;
+    const mantissa = num / Math.pow(10, exp);
+    return `${mantissa.toFixed(精度)}e${exp}`;
+};
+
+
 export const 格式化数字 = (num) => {
-    // 1. 防御性编程：处理 null, undefined
-    if (num === null || num === undefined) return '0';
+    if (num === 0 || !num) return '0';
 
-    // 【核心修复】强制转为数字，防止字符串混入（比如 "123".toFixed 就会报错）
-    const val = Number(num);
+    const 设置 = use游戏设置();
+    const { 数字模式, 保留小数 } = 设置.显示配置;
 
-    // 如果转完不是个数字（比如传了 "abc" 或 {}），直接返回 0 安全退出
-    if (isNaN(val)) return '0';
-    if (val === 0) return '0';
-
-    // 2. 取绝对值用于判断量级
-    const abs = Math.abs(val);
-
-    // --- 场景一：小于 1000 的数字 (包含负的小数) ---
-    if (abs < 1000) {
-        // 使用 val 而不是 num
-        return parseFloat(val.toFixed(2));
+    // 指挥中心：根据模式选择对应的策略函数
+    switch (数字模式) {
+        case 'scientific':  return 算法_科学计数(num, 保留小数);
+        case 'engineering': return 算法_工程计数(num, 保留小数);
+        case 'standard':
+        default:            return 算法_标准后缀(num, 保留小数);
     }
-
-    // --- 场景二：大数值格式化 (K, M, B, T) ---
-    if (abs < 1000000)
-        return parseFloat((val / 1000).toFixed(2)) + 'K';
-
-    if (abs < 1000000000)
-        return parseFloat((val / 1000000).toFixed(2)) + 'M';
-
-    if (abs < 1000000000000)
-        return parseFloat((val / 1000000000).toFixed(2)) + 'B';
-
-    return parseFloat((val / 1000000000000).toFixed(2)) + 'T';
-}
+};
 
 export const 格式化字节 = (bytes) => {
     if (bytes === 0 || isNaN(bytes)) return '0 B';

@@ -7,8 +7,7 @@
         <div v-else>
             <n-flex justify="space-between" align="center" style="margin-bottom: 6px;">
                 <n-text depth="3" style="font-size: 12px; font-family: monospace;">
-                    剩余: <span style="color: #18a058; font-weight: bold;">{{ 格式化字节(池数据.剩余) }}</span> / {{ 格式化字节(池数据.总量)
-                    }}
+                    剩余: <span class="remaining-text">{{ 格式化字节(池数据.剩余) }}</span> / {{ 格式化字节(池数据.总量) }}
                 </n-text>
             </n-flex>
             <n-progress type="line" :percentage="池数据.总量 > 0 ? (池数据.已用 / 池数据.总量) * 100 : 0" :show-indicator="false"
@@ -17,8 +16,7 @@
 
             <n-divider style="margin: 16px 0;" />
 
-            <div v-for="(分配量, 物品id) in 当前分类配额表" :key="物品id"
-                style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #e5e5e5;">
+            <div v-for="(分配量, 物品id) in 当前分类配额表" :key="物品id" class="quota-item">
 
                 <n-flex justify="space-between" align="center" style="margin-bottom: 4px;">
                     <div style="font-weight: bold;">
@@ -56,12 +54,12 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useMessage } from 'naive-ui';
+import { useMessage, useThemeVars } from 'naive-ui'; //
 import { use计算机系统 } from '@/stores/ji_suan_ji_xi_tong.js';
 import { 获取物品数据, 获取所有物品列表, 获取物品存储类别 } from '@/pei_zhi_shu_ju.js';
 import { 格式化字节 } from '@/gong_ju';
 
-// 接收父组件传来的类别名称 ('物体' | '流体' | '能源')
+const themeVars = useThemeVars(); //
 const props = defineProps({
     category: { type: String, required: true }
 });
@@ -70,10 +68,8 @@ const 计算机 = use计算机系统();
 const message = useMessage();
 const 所有物品数组 = Object.values(获取所有物品列表());
 
-// 1. 获取当前类别的池状态
 const 池数据 = computed(() => 计算机.公共池状态[props.category]);
 
-// 2. 筛选出只属于当前类别的配额表
 const 当前分类配额表 = computed(() => {
     const result = {};
     for (const [id, 分配量] of Object.entries(计算机.保底配额表)) {
@@ -84,11 +80,9 @@ const 当前分类配额表 = computed(() => {
     return result;
 });
 
-// 3. 下拉列表只显示属于当前类别的物品
 const 当前分类可用选项 = computed(() => {
     return 所有物品数组.filter(item => {
         if (['科技包', '计算机硬件'].includes(item.类型)) return false;
-        // 核心过滤：只保留匹配当前 props.category 的物品
         if (获取物品存储类别(item.id) !== props.category) return false;
         return true;
     }).map(item => ({ label: item.名称, value: item.id }));
@@ -115,3 +109,18 @@ const 触发配额更新 = (物品id, val) => {
     }
 };
 </script>
+
+<style scoped>
+.remaining-text {
+    /* 使用 Naive UI 的成功色替换硬编码绿色 */
+    color: v-bind('themeVars.successColor'); 
+    font-weight: bold;
+}
+
+.quota-item {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    /* 使用动态分割线颜色 */
+    border-bottom: 1px dashed v-bind('themeVars.dividerColor'); 
+}
+</style>

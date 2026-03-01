@@ -1,9 +1,9 @@
 <template>
-  <div style="display: flex; flex-direction: column; gap: 16px;">
+  <div class="ke-ji-lan-container">
     
     <n-collapse :default-expanded-names="['科研调度']">
       <n-collapse-item title="🔬 实验室" name="科研调度">
-        <div style="background-color: #f8f8fa; padding: 16px; border-radius: 8px; border: 1px solid #eef0f5;">
+        <div class="lab-dispatch-container">
           
           <n-flex justify="space-between" align="center" style="margin-bottom: 16px;">
             <n-text depth="3" style="font-size: 13px;">操作倍率</n-text>
@@ -17,9 +17,8 @@
 
           <n-empty v-if="可用实验室列表.length === 0" description="尚未解锁任何科研建筑" style="margin: 20px 0;" />
 
-          <div v-else style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
-            <div v-for="machineId in 可用实验室列表" :key="machineId"
-              style="border: 1px solid #e0e0e6; border-radius: 6px; padding: 12px; background-color: #fff; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+          <div v-else class="lab-grid">
+            <div v-for="machineId in 可用实验室列表" :key="machineId" class="lab-card">
               
               <n-flex justify="space-between" align="center" style="margin-bottom: 12px;">
                 <n-text strong style="font-size: 15px;">
@@ -34,14 +33,14 @@
                 <n-text depth="3" style="font-size: 13px;">投入数量</n-text>
                 <n-button-group size="small">
                   <n-button @click="配方分配.减少分配数量('ke_yan', machineId, 1 * 倍率)" style="width: 36px; font-weight: bold;">-</n-button>
-                  <div style="width: 60px; flex-shrink: 0; background: #fafafc; border-top: 1px solid #e0e0e6; border-bottom: 1px solid #e0e0e6; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: monospace; font-size: 14px;">
+                  <div class="allocation-number-box">
                     {{ 格式化数字(配方分配.查询分配数量('ke_yan', machineId)) }}
                   </div>
                   <n-button @click="尝试增加分配('ke_yan', machineId, 1 * 倍率)" style="width: 36px; font-weight: bold;">+</n-button>
                 </n-button-group>
               </n-flex>
 
-              <div v-if="配方分配.查询分配数量('ke_yan', machineId) > 0" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e5e5e5;">
+              <div v-if="配方分配.查询分配数量('ke_yan', machineId) > 0" class="machine-status-action">
                 <n-button 
                   block 
                   size="small" 
@@ -59,7 +58,7 @@
       </n-collapse-item>
     </n-collapse>
 
-    <n-card size="small" :bordered="false" style="background-color: transparent;">
+    <n-card size="small" :bordered="false" class="filter-card">
       <n-radio-group v-model:value="当前筛选" size="medium">
         <n-radio-button value="已研究">已研究 ({{ 已研究列表.length }})</n-radio-button>
         <n-radio-button value="可研究">可研究 ({{ 可研究列表.length }})</n-radio-button>
@@ -90,12 +89,14 @@ import { use配方分配 } from '@/stores/pei_fang_fen_pei';
 import { 获取所有科技列表, 获取所有建筑列表 } from '@/pei_zhi_shu_ju';
 import { 格式化数字 } from '@/gong_ju';
 import Wu_pin_chao_lian_jie from '../tong_yong/wu_pin_chao_lian_jie.vue';
-import { useMessage } from 'naive-ui';
+import { useMessage, useThemeVars } from 'naive-ui'; // 修正：引入 useThemeVars
 
 const emit = defineEmits(['发送科技id']);
 const 科技系统 = use科技系统();
 const 库存 = use库存();
 const 配方分配 = use配方分配();
+const message = useMessage();
+const themeVars = useThemeVars(); // 修正：初始化变量
 
 // 筛选状态与倍率
 const 当前筛选 = ref('可研究');
@@ -107,25 +108,19 @@ const 可用实验室列表 = computed(() => {
     .map(b => b.id);
 });
 
-
-const message = useMessage();
-
-// 新建一个拦截验证函数
+// 拦截验证函数
 const 尝试增加分配 = (配方id, 建筑id, 期望数量) => {
     const 之前数量 = 配方分配.查询分配数量(配方id, 建筑id);
     const 拦截结果 = 配方分配.增加分配数量(配方id, 建筑id, 期望数量);
     const 之后数量 = 配方分配.查询分配数量(配方id, 建筑id);
     
-    // 如果返回false或者实际增加的比期望的少，且库存还有货，说明是算力不够被拦了
     if (拦截结果 === false || (之后数量 - 之前数量 < 期望数量 && 库存.查询库存(建筑id) > 0)) {
-        message.warning('内存算力已达上限！请前往计算中心扩展阵列。');
+        message.warning('内存容量已达上限！请前往计算中心扩展阵列。');
     }
 };
 
-// 获取所有科技的数组
 const 所有科技数组 = Object.values(获取所有科技列表());
 
-// 计算三大列表
 const 已研究列表 = computed(() => 所有科技数组.filter(t => 科技系统.已解锁科技.includes(t.id)));
 const 可研究列表 = computed(() => 科技系统.可研发科技列表);
 const 未解锁列表 = computed(() => {
@@ -144,7 +139,59 @@ const 当前显示列表 = computed(() => {
 </script>
 
 <style scoped>
-/* 美化折叠面板的标题 */
+.ke-ji-lan-container {
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px;
+}
+
+/* 修正：科研调度面板样式 */
+.lab-dispatch-container {
+  background-color: v-bind('themeVars.modalColor'); 
+  padding: 16px; 
+  border-radius: 8px; 
+  border: 1px solid v-bind('themeVars.borderColor');
+}
+
+.lab-grid {
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+  gap: 16px;
+}
+
+.lab-card {
+  border: 1px solid v-bind('themeVars.borderColor'); 
+  border-radius: 6px; 
+  padding: 12px; 
+  background-color: v-bind('themeVars.cardColor'); 
+  transition: all 0.2s; 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.allocation-number-box {
+  width: 60px; 
+  flex-shrink: 0; 
+  background: v-bind('themeVars.actionColor'); 
+  border-top: 1px solid v-bind('themeVars.borderColor'); 
+  border-bottom: 1px solid v-bind('themeVars.borderColor'); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-weight: bold; 
+  font-family: monospace; 
+  font-size: 14px;
+}
+
+.machine-status-action {
+  margin-top: 12px; 
+  padding-top: 12px; 
+  border-top: 1px dashed v-bind('themeVars.dividerColor');
+}
+
+.filter-card {
+  background-color: transparent !important;
+}
+
 :deep(.n-collapse-item__header) {
   font-weight: bold;
   font-size: 15px;

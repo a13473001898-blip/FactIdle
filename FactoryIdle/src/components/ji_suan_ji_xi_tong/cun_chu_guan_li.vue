@@ -28,9 +28,10 @@
 
 <script setup>
 import { use计算机系统 } from '@/stores/ji_suan_ji_xi_tong.js';
-// 引入刚刚建好的积木组件
 import pei_e_qu_kuai from './pei_e_qu_kuai.vue';
+import { useThemeVars } from 'naive-ui'; //
 
+const themeVars = useThemeVars(); //
 const 计算机 = use计算机系统();
 </script>
 
@@ -39,7 +40,8 @@ const 计算机 = use计算机系统();
 :deep(.n-collapse-item__header) {
   font-weight: bold;
   font-size: 14px;
-  background-color: #f8f8fa;
+  /* 使用 Naive UI 动态变量替换硬编码背景 */
+  background-color: v-bind('themeVars.tableColor'); 
   padding: 8px 12px !important;
   border-radius: 6px;
   margin-bottom: 4px;

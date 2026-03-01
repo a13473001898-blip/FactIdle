@@ -9,6 +9,7 @@ import { use游戏控制 } from "./stores/you_xi_kong_zhi.js";
 import { 执行全局速率结算 } from '@/systems/jie_suan_yin_qing.js';
 import { 引擎信号 } from "./systems/quan_ju_xin_hao.js";
 import { use计算机系统 } from "./stores/ji_suan_ji_xi_tong.js";
+import { use手动生产 } from '@/composables/shou_dong_sheng_chan.js';
 
 // =================游戏核心函数=================
 
@@ -87,6 +88,7 @@ let 动画帧ID = null;
 export function 启动游戏循环() {
     const 科技系统 = use科技系统()
     const 游戏控制 = use游戏控制()
+    const { 逻辑更新: 手动生产更新 } = use手动生产();
 
     if (动画帧ID !== null) {
         cancelAnimationFrame(动画帧ID);
@@ -113,6 +115,8 @@ export function 启动游戏循环() {
                 科技系统.推进实际科研进度(固定步长秒);
 
                 推进库存自然增长(固定步长秒)
+
+                手动生产更新(固定步长秒);
                 // ================= 逻辑帧结束 =================
 
                 累加器 -= 固定步长秒;

@@ -28,6 +28,8 @@
 // 现在它们都在同一个文件夹下了，直接引入
 import xiang_qing_ka_pian from './xiang_qing_ka_pian.vue';
 import pei_fang_ka_pian from './pei_fang_ka_pian.vue';
+import { useThemeVars } from 'naive-ui';
+const themeVars = useThemeVars();
 
 defineProps({
   id: { type: String, default: null }

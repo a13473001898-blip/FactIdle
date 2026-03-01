@@ -24,11 +24,11 @@
             🔒 前置条件未满足
           </n-button>
           
-          <div v-else-if="已研究" style="background-color: #f0fdf4; border: 1px solid #18a058; color: #18a058; border-radius: 4px; padding: 10px; text-align: center; font-weight: bold;">
+          <div v-else-if="已研究" style="background-color: rgba(24, 160, 88, 0.1); border: 1px solid #18a058; color: #18a058; border-radius: 4px; padding: 10px; text-align: center; font-weight: bold;">
             ✅ 已完成研发
           </div>
 
-          <div v-if="是当前正在研究" style="background-color: #f0f8ff; border: 1px solid #bae0ff; border-radius: 6px; padding: 12px;">
+          <div v-if="是当前正在研究" style="background-color: rgba(24, 160, 88, 0.1); border: 1px solid #bae0ff; border-radius: 6px; padding: 12px;">
             <n-flex justify="space-between" align="center" style="margin-bottom: 8px;">
               <n-text style="font-size: 13px; font-weight: bold; color: #0050b3;">
                 ⚙️ 研发中 {{ Math.floor((科技系统.当前研发.已完成比例 || 0) * 100) }}%
@@ -43,7 +43,7 @@
 
         <div style="display: flex; flex-direction: column; gap: 12px;">
           
-          <div style="background-color: #fafafc; border-radius: 6px; padding: 12px; border: 1px solid #eef0f5;">
+          <div style="background-color: rgba(24, 160, 88, 0.1); border-radius: 6px; padding: 12px; border: 1px solid #eef0f5;">
             <n-text depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">研究消耗</n-text>
             <n-empty v-if="!科技?.投入 || 科技.投入.length === 0" description="无消耗" style="margin: 0; padding: 0;" />
             <div v-else style="display: flex; flex-wrap: wrap; gap: 6px;">
@@ -53,7 +53,7 @@
             </div>
           </div>
 
-          <div style="background-color: #f4fce3; border-radius: 6px; padding: 12px; border: 1px solid #e3f3c3;">
+          <div style="background-color: rgba(24, 160, 88, 0.1); border-radius: 6px; padding: 12px; border: 1px solid #e3f3c3;">
             <n-text style="font-size: 12px; margin-bottom: 8px; display: block; color: #5a8a15; font-weight: bold;">解锁配方</n-text>
             <n-empty v-if="!科技?.解锁配方 || 科技.解锁配方.length === 0" description="无解锁内容" style="margin: 0; padding: 0;" />
             <div v-else style="display: flex; flex-wrap: wrap; gap: 6px;">

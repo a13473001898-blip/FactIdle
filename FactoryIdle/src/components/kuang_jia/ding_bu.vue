@@ -7,47 +7,53 @@
         strong 
         secondary 
         @click="游戏控制.切换暂停状态()"
+        style="width: 100px;"
       >
-        {{ 游戏控制.暂停 ? '▶ 恢复运行' : '⏸ 暂停游戏' }}
+        {{ 游戏控制.暂停 ? '▶ 恢复' : '⏸ 暂停' }}
       </n-button>
       
       <n-button-group>
-        <n-button secondary :type="算力警告 ? 'error' : 'default'" @click="游戏控制.打开计算面板()">
-          <span>内存: {{ 格式化字节(计算机.已用内存容量) }}/{{ 格式化字节(计算机.总内存容量) }}</span>
+        <n-button secondary :type="内存警告 ? 'error' : 'default'" @click="游戏控制.打开计算面板()">
+          <span class="header-stat">内存: {{ 格式化字节(计算机.已用内存容量) }}/{{ 格式化字节(计算机.总内存容量) }}</span>
         </n-button>
         <n-button secondary :type="硬盘警告 ? 'error' : 'default'" @click="游戏控制.打开计算面板()">
-          <span>硬盘: {{ 格式化字节(计算机.已用硬盘容量) }}/{{ 格式化字节(计算机.总硬盘容量) }}</span>
+          <span class="header-stat">硬盘: {{ 格式化字节(计算机.已用硬盘容量) }}/{{ 格式化字节(计算机.总硬盘容量) }}</span>
         </n-button>
       </n-button-group>
     </n-flex>
 
-    <n-flex gap="24px" align="center">
+    <n-flex gap="24px" align="center" :wrap="false">
       
-      <div style="width: 200px;">
-        <n-text depth="3" v-if="!科技系统.当前研发.科技ID">当前未进行研究</n-text>
+      <div style="width: 180px; flex-shrink: 0;">
+        <n-text depth="3" v-if="!科技系统.当前研发.科技ID" style="font-size: 12px;">暂无研发项目</n-text>
         <div v-else>
-          <n-flex justify="space-between" align="center" style="margin-bottom: 2px;">
-            <n-text style="font-size: 13px; font-weight: bold;">
+          <n-flex justify="space-between" align="baseline" style="margin-bottom: 2px;">
+            <n-text strong class="truncate-text" style="font-size: 13px; max-width: 130px;">
               {{ 获取科技数据(科技系统.当前研发.科技ID)?.名称 }}
             </n-text>
-            <n-text style="font-size: 12px;" depth="3">
+            <n-text style="font-size: 11px; font-family: monospace;" depth="3">
               {{ Math.floor((科技系统.当前研发.已完成比例 || 0) * 100) }}%
             </n-text>
           </n-flex>
-          <n-progress type="line" :percentage="(科技系统.当前研发.已完成比例 || 0) * 100" :show-indicator="false" status="info" processing />
+          <n-progress type="line" :percentage="(科技系统.当前研发.已完成比例 || 0) * 100" :show-indicator="false" status="info" processing style="height: 6px;" />
         </div>
       </div>
 
-      <n-flex gap="16px">
-        <div v-for="type in ['热能', '蒸汽', '电力']" :key="type" style="width: 120px;">
-          <n-flex justify="space-between" align="center" style="margin-bottom: 2px;">
-            <n-text style="font-size: 12px;" depth="2">{{ type }}负载</n-text>
-            <n-text style="font-size: 12px; font-family: monospace;" depth="3">
-              {{ 格式化数字(能源模块.数据[type]?.需求 || 0) }} / {{ 格式化数字(能源模块.数据[type]?.供应 || 0) }} 
+      <n-flex gap="16px" :wrap="false">
+        <div v-for="type in ['热能', '蒸汽', '电力']" :key="type" class="energy-item">
+          <n-flex justify="space-between" align="baseline" style="margin-bottom: 2px;">
+            <n-text depth="3" style="font-size: 11px;">{{ type }}</n-text>
+            <n-text :class="['energy-value', 能源模块.获取能源状态颜色(type)]">
+              {{ 格式化数字(能源模块.数据[type]?.需求 || 0) }}/{{ 格式化数字(能源模块.数据[type]?.供应 || 0) }}
             </n-text>
           </n-flex>
-          <n-progress type="line" :percentage="能源模块.获取能源负载百分比(type)" :show-indicator="false"
-            :status="能源模块.获取能源状态颜色(type)" />
+          <n-progress 
+            type="line" 
+            :percentage="能源模块.获取能源负载百分比(type)" 
+            :show-indicator="false"
+            :status="能源模块.获取能源状态颜色(type)" 
+            style="height: 6px;"
+          />
         </div>
       </n-flex>
 
@@ -61,24 +67,65 @@ import { 获取科技数据 } from '@/pei_zhi_shu_ju';
 import { use科技系统 } from '@/stores/ke_ji_xi_tong';
 import { use能源模块 } from '@/stores/neng_yuan_xi_tong.js';
 import { use游戏控制 } from '@/stores/you_xi_kong_zhi.js';
-import { 格式化数字, 格式化字节 } from '@/gong_ju'
-
-// 引入计算机系统和配方分配（用来算已用内存容量）
 import { use计算机系统 } from '@/stores/ji_suan_ji_xi_tong.js';
-import { use配方分配 } from '@/stores/pei_fang_fen_pei.js';
-import { 获取建筑数据 } from '@/pei_zhi_shu_ju';
+import { 格式化数字, 格式化字节 } from '@/gong_ju'
+import { use游戏设置 } from '@/stores/she_zhi.js';
 
 const 能源模块 = use能源模块();
 const 科技系统 = use科技系统();
 const 游戏控制 = use游戏控制();
 const 计算机 = use计算机系统();
+const 游戏设置 = use游戏设置();
 
-// 计算所有分类的总物理容量
-
-// 警告逻辑
-const 算力警告 = computed(() => 计算机.已用内存容量 >= 计算机.总内存容量);
+// 语义化更新：算力警告 -> 内存警告
+const 内存警告 = computed(() => {
+    if (计算机.总内存容量 === 0) return true;
+    const 占用率 = 计算机.已用内存容量 / 计算机.总内存容量;
+    // 使用玩家设置的红色阈值 (例如 0.9)
+    return 占用率 >= 游戏设置.阈值配置['内存红色报警'];
+});
 const 硬盘警告 = computed(() => {
-    if (计算机.总硬盘容量.value === 0) return true;
-    return (计算机.已用硬盘容量 / 计算机.总硬盘容量) > 0.95;
+    if (计算机.总硬盘容量 === 0) return true;
+    const 占用率 = 计算机.已用硬盘容量 / 计算机.总硬盘容量;
+    // 使用玩家设置的红色阈值
+    return 占用率 >= 游戏设置.阈值配置['硬盘红色报警'];
 });
 </script>
+
+<style scoped>
+.header-stat {
+  font-family: 'Fira Code', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.energy-item {
+  width: 145px; /* 增加基础宽度 */
+  flex-shrink: 0;
+}
+
+.energy-value {
+  font-size: 11px;
+  font-family: 'Fira Code', monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap; /* 核心：防止能源数值换行 */
+}
+
+/* 状态颜色与进度条同步 */
+.success { color: #18a058; }
+.warning { color: #f0a020; }
+.error { color: #d03050; }
+
+.truncate-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* 移除全局布局可能的干扰 */
+:deep(.n-progress-content) {
+  line-height: 1 !important;
+}
+</style>

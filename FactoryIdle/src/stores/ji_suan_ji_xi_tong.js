@@ -31,7 +31,7 @@ export const use计算机系统 = defineStore('ji_suan_ji_xi_tong', {
             };
         },
         总内存容量: (state) => {
-            return state.装备的内存.reduce((sum, id) => sum + (获取物品数据(id)?.提供算力 || 0), 0);
+            return state.装备的内存.reduce((sum, id) => sum + (获取物品数据(id)?.提供内存 || 0), 0);
         },
 
         分类总容量: (state) => {
@@ -62,14 +62,14 @@ export const use计算机系统 = defineStore('ji_suan_ji_xi_tong', {
             let 占用 = 0;
             for (const 配方id in 配方分配.数据) {
                 for (const 建筑id in 配方分配.数据[配方id]) {
-                    const 建筑数据 = 获取建筑数据(建筑id);
-                    占用 += 配方分配.数据[配方id][建筑id].数量 * (建筑数据?.内存占用 || 1);
+                    const 物品数据 = 获取物品数据(建筑id);
+                    占用 += 配方分配.数据[配方id][建筑id].数量 * (物品数据?.字节 || 1);
                 }
             }
             return 占用;
         },
 
-        算力满足率() {
+        内存满足率() {
             const 占用 = this.已用内存容量;
             const 总数 = this.总内存容量;
             if (总数 === 0 && 占用 > 0) return 0; // 一点内存没有但有机器，直接全厂瘫痪

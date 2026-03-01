@@ -3,7 +3,7 @@
         
         <n-collapse :default-expanded-names="['高级筛选']">
             <n-collapse-item title="筛选与追踪" name="高级筛选">
-                <div v-memo="[选中的分类, 追踪物品ID]" style="background-color: #fafafc; padding: 16px; border-radius: 8px; border: 1px solid #eee;">
+                <div v-memo="[选中的分类, 追踪物品ID]" style="background-color: v-bind('themeVars.actionColor'); padding: 16px; border-radius: 8px; border: v-bind('themeVars.borderColor');">
                     
                     <n-text depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">按类型筛选</n-text>
                     <n-checkbox-group v-model:value="选中的分类">
@@ -47,6 +47,8 @@ import { computed, ref, watch } from 'vue';
 import Wu_pin_ka_pian from './wu_pin_ka_pian.vue';
 // 引入 获取物品数据 用于查询缺失的类型
 import { 物品类型, 获取所有物品列表, 物品ID, 获取所有配方列表, 获取物品数据 } from '@/pei_zhi_shu_ju';
+import { useThemeVars } from 'naive-ui';
+const themeVars = useThemeVars();
 
 const emit = defineEmits(['发送物品id'])
 
