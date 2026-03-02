@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="计算机.分类总容量[category] === 0" style="padding: 16px 0; text-align: center;">
+        <div v-if="计算机.分类总容量()[category] === 0" style="padding: 16px 0; text-align: center;">
             <n-text depth="3">未挂载该类型的硬盘，无法分配存储空间</n-text>
         </div>
 
@@ -54,25 +54,27 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useMessage, useThemeVars } from 'naive-ui'; //
+import { useMessage, useThemeVars } from 'naive-ui'; 
 import { use计算机系统 } from '@/stores/ji_suan_ji_xi_tong.js';
 import { 获取物品数据, 获取所有物品列表, 获取物品存储类别 } from '@/pei_zhi_shu_ju.js';
 import { 格式化字节 } from '@/gong_ju';
+import { use殖民地系统 } from '@/stores/zhi_min_di_xi_tong.js';
 
-const themeVars = useThemeVars(); //
+const themeVars = useThemeVars(); 
 const props = defineProps({
     category: { type: String, required: true }
 });
 
 const 计算机 = use计算机系统();
+const 殖民地系统 = use殖民地系统();
 const message = useMessage();
 const 所有物品数组 = Object.values(获取所有物品列表());
 
-const 池数据 = computed(() => 计算机.公共池状态[props.category]);
+const 池数据 = computed(() => 计算机.公共池状态()[props.category]);
 
 const 当前分类配额表 = computed(() => {
     const result = {};
-    for (const [id, 分配量] of Object.entries(计算机.保底配额表)) {
+    for (const [id, 分配量] of Object.entries(计算机._当前机箱.保底配额表)) {
         if (获取物品存储类别(id) === props.category) {
             result[id] = 分配量;
         }
@@ -82,7 +84,7 @@ const 当前分类配额表 = computed(() => {
 
 const 当前分类可用选项 = computed(() => {
     return 所有物品数组.filter(item => {
-        if (['科技包', '计算机硬件'].includes(item.类型)) return false;
+        if (['科技包', '计算机硬件', '建筑'].includes(item.类型)) return false;
         if (获取物品存储类别(item.id) !== props.category) return false;
         return true;
     }).map(item => ({ label: item.名称, value: item.id }));
@@ -91,8 +93,8 @@ const 当前分类可用选项 = computed(() => {
 const 新增配额物品 = ref(null);
 
 const 执行新增配额 = () => {
-    if (新增配额物品.value && 计算机.保底配额表[新增配额物品.value] === undefined) {
-        const 成功 = 计算机.设置保底配额(新增配额物品.value, 100);
+    if (新增配额物品.value && 计算机._当前机箱.保底配额表[新增配额物品.value] === undefined) {
+        const 成功 = 计算机.设置保底配额(新增配额物品.value, 100,殖民地系统.当前视角ID);
         if (!成功) {
             message.warning("硬盘总容量不足，无法新增保底配额！");
         } else {
@@ -103,24 +105,14 @@ const 执行新增配额 = () => {
 
 const 触发配额更新 = (物品id, val) => {
     if (val === null) val = 0;
-    const 成功 = 计算机.设置保底配额(物品id, val);
+    const 成功 = 计算机.设置保底配额(物品id, val,殖民地系统.当前视角ID);
     if (!成功) {
-        message.error("硬盘总容量不足，分配失败！");
+        message.error("剩余空间不足或被其他物品占满，分配失败！");
     }
 };
 </script>
 
 <style scoped>
-.remaining-text {
-    /* 使用 Naive UI 的成功色替换硬编码绿色 */
-    color: v-bind('themeVars.successColor'); 
-    font-weight: bold;
-}
-
-.quota-item {
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    /* 使用动态分割线颜色 */
-    border-bottom: 1px dashed v-bind('themeVars.dividerColor'); 
-}
+.remaining-text { color: v-bind('themeVars.successColor'); font-weight: bold; }
+.quota-item { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed v-bind('themeVars.dividerColor'); }
 </style>

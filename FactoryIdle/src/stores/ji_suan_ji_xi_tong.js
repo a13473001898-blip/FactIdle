@@ -1,124 +1,184 @@
+// src/stores/ji_suan_ji_xi_tong.js
 import { defineStore } from 'pinia';
 import { 获取物品数据, 物品ID, 获取物品存储类别, 获取所有物品列表 } from '@/pei_zhi_shu_ju.js';
 import { use库存 } from '@/stores/ku_cun.js';
 import { 引擎信号 } from '@/systems/quan_ju_xin_hao.js';
 import { use配方分配 } from '@/stores/pei_fang_fen_pei.js';
-import { 获取建筑数据 } from '@/pei_zhi_shu_ju.js';
+import { use殖民地系统 } from './zhi_min_di_xi_tong.js';
+
+function 物理机箱模板() {
+    // 🌟 新增：云端配额 (划拨给全网云端的字节数)
+    return { 装备的主板: null, 装备的CPU: null, 装备的内存: [], 装备的硬盘: [], 保底配额表: {}, 云端配额: 0 };
+}
 
 export const use计算机系统 = defineStore('ji_suan_ji_xi_tong', {
     state: () => ({
-        // --- 物理硬件插槽 ---
-        装备的主板: 物品ID.木质主板,
-        装备的CPU: null,
-        装备的内存: [物品ID.创造内存],
-        装备的硬盘: [物品ID.创造物体硬盘],
-
-        // --- 软件配置表 (保底配额) ---
-        保底配额表: {}
+        本地插槽: {
+            'main_base': {
+                装备的主板: 物品ID.木质主板, 装备的CPU: null, 装备的内存: [物品ID.创造内存], 装备的硬盘: [物品ID.创造物体硬盘], 保底配额表: {},
+                云端配额: 0 // 🌟 初始默认为 0
+            }
+        }
     }),
 
     getters: {
-        当前平台: (state) => {
-            if (!state.装备的主板) return null;
-            return 获取物品数据(state.装备的主板)?.平台 || '未知';
+        _当前机箱: (state) => {
+            const cid = use殖民地系统().当前视角ID;
+            return state.本地插槽[cid] || 物理机箱模板();
         },
-        槽位限制: (state) => {
-            const 主板数据 = 获取物品数据(state.装备的主板);
+        当前平台: (state) => (cid) => {
+            const 目标cid = cid || use殖民地系统().当前视角ID;
+            const 机箱 = state.本地插槽[目标cid] || 物理机箱模板();
+            if (!机箱.装备的主板) return null;
+            return 获取物品数据(机箱.装备的主板)?.平台 || '未知';
+        },
+        槽位限制: (state) => (cid) => {
+            const 目标cid = cid || use殖民地系统().当前视角ID;
+            const 机箱 = state.本地插槽[目标cid] || 物理机箱模板();
+            const 主板数据 = 获取物品数据(机箱.装备的主板);
             return {
                 CPU: 主板数据?.CPU槽位 || 0,
                 内存: 主板数据?.内存槽位 || 0,
                 硬盘: 主板数据?.硬盘槽位 || 0
             };
         },
-        总内存容量: (state) => {
-            return state.装备的内存.reduce((sum, id) => sum + (获取物品数据(id)?.提供内存 || 0), 0);
+        总内存容量: (state) => (cid) => {
+            const 目标cid = cid || use殖民地系统().当前视角ID;
+            const 机箱 = state.本地插槽[目标cid] || 物理机箱模板();
+            return 机箱.装备的内存.reduce((sum, id) => sum + (获取物品数据(id)?.提供内存 || 0), 0);
         },
-
-        分类总容量: (state) => {
+        分类总容量: (state) => (cid) => {
+            const 目标cid = cid || use殖民地系统().当前视角ID;
+            const 机箱 = state.本地插槽[目标cid] || 物理机箱模板();
             const 统计 = { 物体: 0, 能源: 0, 流体: 0 };
-            state.装备的硬盘.forEach(id => {
+            机箱.装备的硬盘.forEach(id => {
                 const 硬件 = 获取物品数据(id);
                 const 类别 = 硬件?.存储类别 || '物体';
                 统计[类别] += 硬件?.提供容量 || 0;
             });
             return 统计;
         },
-
-        分类已分配保底: (state) => {
+        分类已分配保底: (state) => (cid) => {
+            const 目标cid = cid || use殖民地系统().当前视角ID;
+            const 机箱 = state.本地插槽[目标cid] || 物理机箱模板();
             const 统计 = { 物体: 0, 能源: 0, 流体: 0 };
-            for (const [id, 数量] of Object.entries(state.保底配额表)) {
+            for (const [id, 数量] of Object.entries(机箱.保底配额表)) {
                 const 类别 = 获取物品存储类别(id);
-                // 👇 新增：获取单体字节
                 const 单体字节 = 获取物品数据(id)?.字节 || 1;
-                // 👇 修改：数量 * 单体字节
                 统计[类别] += 数量 * 单体字节;
             }
             return 统计;
         },
-
-        已用内存容量: () => {
-            // 直接调用顶部的 hook，Pinia 会自动处理循环依赖
+        已用内存容量: () => (cid) => {
             const 配方分配 = use配方分配();
+            const 目标cid = cid || use殖民地系统().当前视角ID;
             let 占用 = 0;
-            for (const 配方id in 配方分配.数据) {
-                for (const 建筑id in 配方分配.数据[配方id]) {
-                    const 物品数据 = 获取物品数据(建筑id);
-                    占用 += 配方分配.数据[配方id][建筑id].数量 * (物品数据?.字节 || 1);
+            const 本地配方 = 配方分配.查询全部(目标cid);
+            for (const 配方id in 本地配方) {
+                for (const 建筑id in 本地配方[配方id]) {
+                    占用 += 本地配方[配方id][建筑id].数量 * (获取物品数据(建筑id)?.字节 || 1);
                 }
             }
             return 占用;
         },
+        内存满足率: (state) => (cid) => {
+            const 目标cid = cid || use殖民地系统().当前视角ID;
+            const 机箱 = state.本地插槽[目标cid];
+            if (!机箱) return 1;
 
-        内存满足率() {
-            const 占用 = this.已用内存容量;
-            const 总数 = this.总内存容量;
-            if (总数 === 0 && 占用 > 0) return 0; // 一点内存没有但有机器，直接全厂瘫痪
-            if (占用 > 总数) return 总数 / 占用; // 内存超载，全厂按比例降频
+            const 配方分配 = use配方分配();
+            let 占用 = 0;
+            const 本地配方 = 配方分配.查询全部(目标cid);
+            for (const 配方id in 本地配方) {
+                for (const 建筑id in 本地配方[配方id]) {
+                    占用 += 本地配方[配方id][建筑id].数量 * (获取物品数据(建筑id)?.字节 || 1);
+                }
+            }
+            const 总数 = 机箱.装备的内存.reduce((sum, id) => sum + (获取物品数据(id)?.提供内存 || 0), 0);
+            if (总数 === 0 && 占用 > 0) return 0;
+            if (占用 > 总数) return 总数 / 占用;
             return 1;
         },
-
-        已用硬盘容量: (state) => {
+        已用硬盘容量: () => (cid) => {
             const 库存 = use库存();
+            const 目标cid = cid || use殖民地系统().当前视角ID;
             let 总已用 = 0;
-            // 获取所有物品列表已经在文件顶部 import 了
             const 所有物品 = 获取所有物品列表();
             for (const 物品id in 所有物品) {
-                const 单体字节 = 所有物品[物品id].字节 || 1;
-                const 数量 = 库存.查询库存(物品id) || 0;
-                总已用 += 数量 * 单体字节;
+                if (所有物品[物品id].类型 !== '建筑' && 所有物品[物品id].类型 !== '计算机硬件') {
+                    总已用 += (库存.查询库存(物品id, 目标cid) || 0) * (所有物品[物品id].字节 || 1);
+                }
             }
             return 总已用;
         },
-
-        总硬盘容量() {
-            const stats = this.分类总容量;
-            return (stats.物体 || 0) + (stats.能源 || 0) + (stats.流体 || 0);
+        总硬盘容量: (state) => (cid) => {
+            const 目标cid = cid || use殖民地系统().当前视角ID;
+            const 机箱 = state.本地插槽[目标cid] || 物理机箱模板();
+            let total = 0;
+            机箱.装备的硬盘.forEach(id => {
+                total += 获取物品数据(id)?.提供容量 || 0;
+            });
+            return total;
+        },
+        
+        // 🌟 新增：全网总云端容量 (遍历所有殖民地相加)
+        全网总云端容量: (state) => {
+            let total = 0;
+            for (const cid in state.本地插槽) {
+                total += state.本地插槽[cid].云端配额 || 0;
+            }
+            return total;
+        },
+        
+        // 🌟 新增：全网已用云端容量 (遍历云端库里的实体建筑和硬件)
+        全网已用云端容量: () => {
+            const 库存 = use库存();
+            let used = 0;
+            const 云端库 = 库存.云端数据 || {};
+            for (const 物品id in 云端库) {
+                const 物品数据 = 获取物品数据(物品id);
+                if (物品数据) {
+                    used += (云端库[物品id] || 0) * (物品数据.字节 || 1);
+                }
+            }
+            return used;
         },
 
-        // 🌟 核心：公共池状态计算 🌟
-        公共池状态: (state) => {
+        公共池状态: (state) => (cid) => {
+            const 目标cid = cid || use殖民地系统().当前视角ID;
             const 库存 = use库存();
+            const 机箱 = state.本地插槽[目标cid] || 物理机箱模板();
             const 状态 = {
                 物体: { 总量: 0, 已用: 0, 剩余: 0 },
                 能源: { 总量: 0, 已用: 0, 剩余: 0 },
                 流体: { 总量: 0, 已用: 0, 剩余: 0 }
             };
 
+            const 统计总容量 = { 物体: 0, 能源: 0, 流体: 0 };
+            机箱.装备的硬盘.forEach(id => {
+                统计总容量[获取物品数据(id)?.存储类别 || '物体'] += 获取物品数据(id)?.提供容量 || 0;
+            });
+
+            const 统计已分配保底 = { 物体: 0, 能源: 0, 流体: 0 };
+            for (const [id, 数量] of Object.entries(机箱.保底配额表)) {
+                统计已分配保底[获取物品存储类别(id)] += 数量 * (获取物品数据(id)?.字节 || 1);
+            }
+
             for (const 类别 of ['物体', '能源', '流体']) {
-                const 该类总容量 = state.分类总容量[类别] || 0;
-                const 该类总保底 = state.分类已分配保底[类别] || 0;
+                const 该类总容量 = 统计总容量[类别] || 0;
+                // 🌟 核心：如果是物体硬盘，必须先把“上划给云端”的空间扣掉
+                const 云端占用 = 类别 === '物体' ? (机箱.云端配额 || 0) : 0;
+                const 该类总保底 = 统计已分配保底[类别] + 云端占用;
 
                 const 公共池总量 = Math.max(0, 该类总容量 - 该类总保底);
                 let 公共池已用 = 0;
 
                 const 所有物品 = 获取所有物品列表();
                 for (const 物品id in 所有物品) {
-                    if (获取物品存储类别(物品id) === 类别) {
+                    if (获取物品存储类别(物品id) === 类别 && 所有物品[物品id].类型 !== '建筑' && 所有物品[物品id].类型 !== '计算机硬件') {
                         const 单体字节 = 所有物品[物品id].字节 || 1;
-                        const 当前占用字节 = (库存.查询库存(物品id) || 0) * 单体字节;
-                        const 专属保底字节 = (state.保底配额表[物品id] || 0) * 单体字节;
-
-                        // 溢出占用的就是公共池的空间
+                        const 当前占用字节 = (库存.查询库存(物品id, 目标cid) || 0) * 单体字节;
+                        const 专属保底字节 = (机箱.保底配额表[物品id] || 0) * 单体字节;
                         const 溢出字节 = Math.max(0, 当前占用字节 - 专属保底字节);
                         公共池已用 += 溢出字节;
                     }
@@ -131,148 +191,236 @@ export const use计算机系统 = defineStore('ji_suan_ji_xi_tong', {
             return 状态;
         },
 
-        // 🌟 给结算引擎查询：该物品最大还能存多少？ 🌟
-        获取物品库存上限: (state) => {
-            return (物品id) => {
+        获取物品库存上限: (state) => (物品id, colonyId) => {
+            const cid = colonyId || use殖民地系统().当前视角ID;
+            const 物品数据 = 获取物品数据(物品id);
+            const 单体字节 = 物品数据?.字节 || 1;
+
+            // 🌟 核心：如果是云端物品，不再无限大，而是受全局云端空间限制！
+            if (物品数据?.类型 === '建筑' || 物品数据?.类型 === '计算机硬件') {
                 const 库存 = use库存();
-                const 物品数据 = 获取物品数据(物品id);
-                const 类别 = 获取物品存储类别(物品id);
-                const 单体字节 = 物品数据?.字节 || 1;
-
-                const 当前占用字节 = (库存.查询库存(物品id) || 0) * 单体字节;
-                const 专属保底字节 = (state.保底配额表[物品id] || 0) * 单体字节;
-                const 公共池剩余 = state.公共池状态[类别].剩余;
-
-                // 核心极值公式！
-                const 最大允许字节 = Math.max(专属保底字节, 当前占用字节) + 公共池剩余;
-
-                return Math.floor(最大允许字节 / 单体字节);
+                const 当前占用字节 = (库存.查询库存(物品id, 'cloud') || 0) * 单体字节;
+                const 全网剩余空间 = Math.max(0, state.全网总云端容量 - state.全网已用云端容量);
+                return Math.floor((当前占用字节 + 全网剩余空间) / 单体字节);
             }
+
+            const 库存 = use库存();
+            const 类别 = 获取物品存储类别(物品id);
+            
+
+            const 机箱 = state.本地插槽[cid] || 物理机箱模板();
+            const 当前占用字节 = (库存.查询库存(物品id, cid) || 0) * 单体字节;
+            const 专属保底字节 = (机箱.保底配额表[物品id] || 0) * 单体字节;
+
+            const 指定池状态 = state.公共池状态(cid);
+            const 公共池剩余 = 指定池状态[类别].剩余;
+
+            const 最大允许字节 = Math.max(专属保底字节, 当前占用字节) + 公共池剩余;
+            return Math.floor(最大允许字节 / 单体字节);
         }
     },
 
     actions: {
-        安装主板(物品id) {
-            const 库存 = use库存();
-            if (this.装备的主板) return false;
-            if (库存.库存减少(物品id, 1)) {
-                this.装备的主板 = 物品id;
-                引擎信号.需要重新结算 = true;
-                return true;
-            }
-            return false;
+        _initColonySlot(cid) {
+            if (!cid) { console.error("🚨 [致命防御] 计算机_initColonySlot 缺省 cid！"); return 物理机箱模板(); }
+            if (!this.本地插槽[cid]) this.本地插槽[cid] = 物理机箱模板();
+            return this.本地插槽[cid];
         },
-        卸载主板() {
-            const 库存 = use库存();
-            if (!this.装备的主板) return false;
-            if (this.装备的内存.length > 0 || this.装备的硬盘.length > 0 || this.装备的CPU) return false;
-            库存.库存增加(this.装备的主板, 1);
-            this.装备的主板 = null;
+
+        // 🌟 新增：设置本地划拨给云端的配额
+        设置云端配额(目标字节, colonyId) {
+            if (!colonyId) { console.error(`🚨 [致命防御] 尝试设置云端配额但未提供 colonyId！`); return false; }
+            const cid = colonyId;
+            const 机箱 = this._initColonySlot(cid);
+
+            if (目标字节 < 0) 目标字节 = 0;
+
+            const 旧配额 = 机箱.云端配额 || 0;
+            const 增加量 = 目标字节 - 旧配额;
+
+            if (增加量 > 0) {
+                // 如果增加上行容量，检查本地物体硬盘有没有空余空间
+                const 物体总容量 = this.分类总容量(cid)['物体'] || 0;
+                const 物体已分配保底 = this.分类已分配保底(cid)['物体'] || 0;
+                
+                if (物体已分配保底 + 旧配额 + 增加量 > 物体总容量) {
+                    return false; // 本地物理硬盘装不下了
+                }
+            } else if (增加量 < 0) {
+                // 如果要缩减配额，必须确保缩减后，全网不会爆盘
+                const 减少量 = -增加量;
+                const 全网剩余空间 = this.全网总云端容量 - this.全网已用云端容量;
+                if (减少量 > 全网剩余空间) {
+                    return false; // 强行缩减会导致现有的建筑/主板因为无处存放而损坏！
+                }
+            }
+
+            机箱.云端配额 = 目标字节;
             引擎信号.需要重新结算 = true;
             return true;
         },
 
-        安装CPU(物品id) {
+        // ==========================
+        // 下方的 安装/卸载 方法保持上一轮改造的代码不变即可
+        // ==========================
+        安装主板(物品id, colonyId) {
+            if (!colonyId) { console.error(`🚨 [致命防御] 尝试安装主板但未提供 colonyId！`); return false; }
+            const cid = colonyId;
+            const 机箱 = this._initColonySlot(cid);
             const 库存 = use库存();
-            const 物品数据 = 获取物品数据(物品id);
-            if (!this.装备的主板 || this.装备的CPU) return false;
-            if (物品数据.平台 && 物品数据.平台 !== this.当前平台) return false;
-            if (this.槽位限制.CPU < 1) return false;
-            if (库存.库存减少(物品id, 1)) {
-                this.装备的CPU = 物品id;
+            if (机箱.装备的主板) return false;
+            if (库存.库存减少(物品id, 1, 'cloud_item_dummy_cid')) {
+                机箱.装备的主板 = 物品id;
                 引擎信号.需要重新结算 = true;
                 return true;
             }
             return false;
         },
-        卸载CPU() {
+        卸载主板(colonyId) {
+            if (!colonyId) { console.error(`🚨 [致命防御] 尝试卸载主板但未提供 colonyId！`); return false; }
+            const cid = colonyId;
+            const 机箱 = this._initColonySlot(cid);
             const 库存 = use库存();
-            if (!this.装备的CPU) return;
-            库存.库存增加(this.装备的CPU, 1);
-            this.装备的CPU = null;
+            if (!机箱.装备的主板) return false;
+            if (机箱.装备的内存.length > 0 || 机箱.装备的硬盘.length > 0 || 机箱.装备的CPU) return false;
+            库存.库存增加(机箱.装备的主板, 1, 'cloud_item_dummy_cid');
+            机箱.装备的主板 = null;
+            引擎信号.需要重新结算 = true;
+            return true;
+        },
+        安装CPU(物品id, colonyId) {
+            if (!colonyId) { console.error(`🚨 [致命防御] 尝试安装CPU但未提供 colonyId！`); return false; }
+            const cid = colonyId;
+            const 机箱 = this._initColonySlot(cid);
+            const 库存 = use库存();
+            const 物品数据 = 获取物品数据(物品id);
+            if (!机箱.装备的主板 || 机箱.装备的CPU) return false;
+            if (物品数据.平台 && 物品数据.平台 !== this.当前平台(cid)) return false;
+            if (this.槽位限制(cid).CPU < 1) return false;
+            if (库存.库存减少(物品id, 1, 'cloud_item_dummy_cid')) {
+                机箱.装备的CPU = 物品id;
+                引擎信号.需要重新结算 = true;
+                return true;
+            }
+            return false;
+        },
+        卸载CPU(colonyId) {
+            if (!colonyId) { console.error(`🚨 [致命防御] 尝试卸载CPU但未提供 colonyId！`); return false; }
+            const cid = colonyId;
+            const 机箱 = this._initColonySlot(cid);
+            const 库存 = use库存();
+            if (!机箱.装备的CPU) return;
+            库存.库存增加(机箱.装备的CPU, 1, 'cloud_item_dummy_cid');
+            机箱.装备的CPU = null;
             引擎信号.需要重新结算 = true;
         },
-
-        安装内存(物品id) {
+        安装内存(物品id, colonyId) {
+            if (!colonyId) { console.error(`🚨 [致命防御] 尝试安装内存但未提供 colonyId！`); return false; }
+            const cid = colonyId;
+            const 机箱 = this._initColonySlot(cid);
             const 库存 = use库存();
             const 物品数据 = 获取物品数据(物品id);
-            if (!this.装备的主板) return false;
-            if (物品数据.平台 && 物品数据.平台 !== this.当前平台) return false;
-            if (this.装备的内存.length >= this.槽位限制.内存) return false;
-            if (库存.库存减少(物品id, 1)) {
-                this.装备的内存.push(物品id);
+            if (!机箱.装备的主板) return false;
+            if (物品数据.平台 && 物品数据.平台 !== this.当前平台(cid)) return false;
+            if (机箱.装备的内存.length >= this.槽位限制(cid).内存) return false;
+            if (库存.库存减少(物品id, 1, 'cloud_item_dummy_cid')) {
+                机箱.装备的内存.push(物品id);
                 引擎信号.需要重新结算 = true;
                 return true;
             }
             return false;
         },
-        卸载内存(索引index) {
+        卸载内存(索引index, colonyId) {
+            if (!colonyId) { console.error(`🚨 [致命防御] 尝试卸载内存但未提供 colonyId！`); return false; }
+            const cid = colonyId;
+            const 机箱 = this._initColonySlot(cid);
             const 库存 = use库存();
-            if (索引index < 0 || 索引index >= this.装备的内存.length) return;
-            const 卸载的物品id = this.装备的内存.splice(索引index, 1)[0];
-            库存.库存增加(卸载的物品id, 1);
+            if (索引index < 0 || 索引index >= 机箱.装备的内存.length) return;
+            const 卸载的物品id = 机箱.装备的内存.splice(索引index, 1)[0];
+            库存.库存增加(卸载的物品id, 1, 'cloud_item_dummy_cid');
             引擎信号.需要重新结算 = true;
         },
-
-        安装硬盘(物品id) {
+        安装硬盘(物品id, colonyId) {
+            if (!colonyId) { console.error(`🚨 [致命防御] 尝试安装硬盘但未提供 colonyId！`); return false; }
+            const cid = colonyId;
+            const 机箱 = this._initColonySlot(cid);
             const 库存 = use库存();
             const 物品数据 = 获取物品数据(物品id);
-            if (!this.装备的主板) return false;
-            if (物品数据.平台 && 物品数据.平台 !== this.当前平台) return false;
-            if (this.装备的硬盘.length >= this.槽位限制.硬盘) return false;
-            if (库存.库存减少(物品id, 1)) {
-                this.装备的硬盘.push(物品id);
+            if (!机箱.装备的主板) return false;
+            if (物品数据.平台 && 物品数据.平台 !== this.当前平台(cid)) return false;
+            if (机箱.装备的硬盘.length >= this.槽位限制(cid).硬盘) return false;
+            if (库存.库存减少(物品id, 1, 'cloud_item_dummy_cid')) {
+                机箱.装备的硬盘.push(物品id);
                 引擎信号.需要重新结算 = true;
                 return true;
             }
             return false;
         },
-        卸载硬盘(索引index) {
+        卸载硬盘(索引index, colonyId) {
+            if (!colonyId) { console.error(`🚨 [致命防御] 尝试卸载硬盘但未提供 colonyId！`); return false; }
+            const cid = colonyId;
+            const 机箱 = this._initColonySlot(cid);
             const 库存 = use库存();
-            if (索引index < 0 || 索引index >= this.装备的硬盘.length) return false;
-
-            const 拟卸载硬件 = 获取物品数据(this.装备的硬盘[索引index]);
+            if (索引index < 0 || 索引index >= 机箱.装备的硬盘.length) return false;
+            const 拟卸载硬件 = 获取物品数据(机箱.装备的硬盘[索引index]);
             const 类别 = 拟卸载硬件?.存储类别 || '物体';
             const 损失容量 = 拟卸载硬件?.提供容量 || 0;
+            const 当前总容量 = this.分类总容量(cid)[类别];
+            
+            // 🌟 卸载硬盘也要确保不能压爆云端和保底
+            const 云端占用 = 类别 === '物体' ? (机箱.云端配额 || 0) : 0;
+            const 当前总保底 = this.分类已分配保底(cid)[类别] + 云端占用;
 
-            if (this.分类总容量[类别] - 损失容量 < this.分类已分配保底[类别]) {
+            if (当前总容量 - 损失容量 < 当前总保底) {
                 return false;
             }
-
-            const 卸载的物品id = this.装备的硬盘.splice(索引index, 1)[0];
-            库存.库存增加(卸载的物品id, 1);
+            const 卸载的物品id = 机箱.装备的硬盘.splice(索引index, 1)[0];
+            库存.库存增加(卸载的物品id, 1, 'cloud_item_dummy_cid');
             引擎信号.需要重新结算 = true;
             return true;
         },
-
-        设置保底配额(物品id, 目标数量) {
+        设置保底配额(物品id, 目标数量, colonyId) {
+            if (!colonyId) { console.error(`🚨 [致命防御] 尝试设置保底配额但未提供 colonyId！`); return false; }
+            const cid = colonyId;
+            const 机箱 = this._initColonySlot(cid);
             if (目标数量 < 0) 目标数量 = 0;
-
             const 类别 = 获取物品存储类别(物品id);
             const 单体字节 = 获取物品数据(物品id)?.字节 || 1;
-
-            // 核心逻辑：计算本次操作真正“新增”了多少个物品
-            const 旧数量 = this.保底配额表[物品id] || 0;
+            const 旧数量 = 机箱.保底配额表[物品id] || 0;
             const 增加的数量 = 目标数量 - 旧数量;
             const 需要新增的字节 = 增加的数量 * 单体字节;
+            
+            // 🌟 计算时带入云端配额
+            const 云端占用 = 类别 === '物体' ? (机箱.云端配额 || 0) : 0;
+            const 该类总保底 = this.分类已分配保底(cid)[类别] + 云端占用;
+            const 该类总容量 = this.分类总容量(cid)[类别] || 0;
 
-            const 该类总保底 = this.分类已分配保底[类别];
-            const 该类总容量 = this.分类总容量[类别] || 0;
-
-            // 超出物理上限拦截
             if (该类总保底 + 需要新增的字节 > 该类总容量) {
                 return false;
             }
-
-            // 数据写入：现在表里存的纯粹是“物品个数”
             if (目标数量 === 0) {
-                delete this.保底配额表[物品id];
+                delete 机箱.保底配额表[物品id];
             } else {
-                this.保底配额表[物品id] = 目标数量;
+                机箱.保底配额表[物品id] = 目标数量;
             }
-
             引擎信号.需要重新结算 = true;
             return true;
         },
+
+        导出数据() { return { 本地插槽: this.本地插槽 }; },
+        导入数据(存档数据, 版本号) {
+            if (!存档数据) return;
+            if (存档数据.装备的主板 !== undefined && !存档数据.本地插槽) {
+                this.本地插槽 = {
+                    'main_base': {
+                        装备的主板: 存档数据.装备的主板, 装备的CPU: 存档数据.装备的CPU,
+                        装备的内存: 存档数据.装备的内存 || [], 装备的硬盘: 存档数据.装备的硬盘 || [], 
+                        保底配额表: 存档数据.保底配额表 || {}, 云端配额: 0
+                    }
+                };
+            } else if (存档数据.本地插槽) {
+                this.本地插槽 = 存档数据.本地插槽;
+            }
+        }
     }
 });

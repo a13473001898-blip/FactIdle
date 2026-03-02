@@ -17,7 +17,8 @@
             <div class="recipe-io-display">
               <div class="io-section">
                 <n-text v-if="!recipe.输入 || recipe.输入.length === 0" depth="3" style="font-size: 13px;">无消耗</n-text>
-                <n-tag v-else v-for="item in recipe.输入" :key="item.id" size="small" type="info" bordered style="font-size: 12px;">
+                <n-tag v-else v-for="item in recipe.输入" :key="item.id" size="small" type="info" bordered
+                  style="font-size: 12px;">
                   <wu_pin_chao_lian_jie :id="item.id" /> * {{ item.数量 }}
                 </n-tag>
               </div>
@@ -25,7 +26,8 @@
               <div class="io-arrow">➔</div>
 
               <div class="io-section">
-                <n-tag v-for="item in recipe.输出" :key="item.id" size="medium" type="success" style="font-size: 13px; font-weight: bold;">
+                <n-tag v-for="item in recipe.输出" :key="item.id" size="medium" type="success"
+                  style="font-size: 13px; font-weight: bold;">
                   <wu_pin_chao_lian_jie :id="item.id" /> * {{ item.数量 }}
                 </n-tag>
               </div>
@@ -57,7 +59,7 @@
             <n-flex justify="space-between" align="center">
               <n-text depth="3" style="font-size: 13px;">已分配</n-text>
               <n-button-group size="small">
-                <n-button @click="配方分配.减少分配数量(recipe.id, machineId, 1 * 倍率)">-</n-button>
+                <n-button @click="配方分配.减少分配数量(recipe.id, machineId, 1 * 倍率, 殖民地系统.当前视角ID)">-</n-button>
                 <div class="machine-count-display">
                   {{ 格式化数字(配方分配.查询分配数量(recipe.id, machineId)) }}
                 </div>
@@ -68,7 +70,7 @@
             <div v-if="配方分配.查询分配数量(recipe.id, machineId) > 0" class="machine-status-toggle">
               <n-button block size="small" secondary
                 :type="配方分配.查询建筑状态(recipe.id, machineId) === '运行' ? 'success' : 'error'"
-                @click="配方分配.切换建筑状态(recipe.id, machineId)">
+                @click="配方分配.切换建筑状态(recipe.id, machineId, 殖民地系统.当前视角ID)">
                 {{ 配方分配.查询建筑状态(recipe.id, machineId) === '运行' ? '✅ 运行中' : '⏸ 已停工' }}
               </n-button>
             </div>
@@ -87,11 +89,13 @@ import { 格式化数字 } from '@/gong_ju.js';
 import { use库存 } from '@/stores/ku_cun.js'
 import { use配方分配 } from '@/stores/pei_fang_fen_pei.js';
 import { useMessage, useThemeVars } from 'naive-ui';
+import { use殖民地系统 } from '@/stores/zhi_min_di_xi_tong.js';
 
 const themeVars = useThemeVars();
 const message = useMessage();
 const 配方分配 = use配方分配();
 const 库存 = use库存();
+const 殖民地系统 = use殖民地系统();
 
 const props = defineProps(['itemId']);
 const 倍率 = ref(1);
@@ -120,8 +124,9 @@ const 获取可用机器ID列表 = (类型) => {
 
 // 内存拦截验证逻辑
 const 尝试增加分配 = (配方id, 建筑id, 期望数量) => {
+  const cid = 殖民地系统.当前视角ID;
   const 之前数量 = 配方分配.查询分配数量(配方id, 建筑id);
-  const 拦截结果 = 配方分配.增加分配数量(配方id, 建筑id, 期望数量);
+  const 拦截结果 = 配方分配.增加分配数量(配方id, 建筑id, 期望数量, cid);
   const 之后数量 = 配方分配.查询分配数量(配方id, 建筑id);
 
   if (拦截结果 === false || (之后数量 - 之前数量 < 期望数量 && 库存.查询库存(建筑id) > 0)) {

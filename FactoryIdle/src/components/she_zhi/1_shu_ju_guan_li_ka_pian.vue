@@ -89,11 +89,19 @@ const 执行导入 = () => {
     negativeText: '取消',
     onPositiveClick: () => {
       try {
+        // 先解密外部代码
         const decodedData = decodeURIComponent(atob(存档代码.value));
-        localStorage.setItem('存档字符串', decodedData); //
-        if (读档()) { //
-          message.success('外部存档导入成功！');
+        
+        // 尝试走一次不落盘（不写入 localStorage）的试运行
+        const 读档成功 = 读档(decodedData);
+        
+        if (读档成功) {
+          // 只有试运行没抛出异常，才真正覆盖玩家的本地备份
+          localStorage.setItem('存档字符串', decodedData);
+          message.success('外部存档导入成功并已应用！');
           存档代码.value = '';
+        } else {
+          message.error('存档损坏，已回滚。');
         }
       } catch (e) {
         message.error('无效的存档代码，请确保代码完整且未被篡改');

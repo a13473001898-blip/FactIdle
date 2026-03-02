@@ -35,5 +35,13 @@ export const use游戏设置 = defineStore('you_xi_she_zhi', {
         更新显示设置(key, value) {
             this.显示配置[key] = value;
         },
+
+        // ================= 存档接口 =================
+        导出数据() {
+            return this.$state;
+        },
+        导入数据(存档数据, 版本号) {
+            if (存档数据) this.$patch(存档数据);
+        },
     }
 });

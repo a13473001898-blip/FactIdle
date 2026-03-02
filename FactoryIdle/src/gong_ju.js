@@ -53,6 +53,6 @@ export const 格式化字节 = (bytes) => {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
     // 如果是 B (0级)，不需要小数，否则保留两位小数
-    if (i === 0) return bytes + ' ' + sizes[i];
+    if (i === 0) return Math.floor(bytes) + ' ' + sizes[i];
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };

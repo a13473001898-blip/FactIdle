@@ -14,6 +14,15 @@ export const use游戏控制 = defineStore('you_xi_kong_zhi', {
         },
         关闭计算面板() {
             this.计算面板显示 = false;
-        }
+        },
+
+        // ================= 存档接口 =================
+        导出数据() {
+            return this.$state;
+        },
+        导入数据(存档数据, 版本号) {
+            if (存档数据) this.$patch(存档数据);
+        },
+
     }
 });
