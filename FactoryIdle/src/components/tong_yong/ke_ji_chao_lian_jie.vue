@@ -8,13 +8,10 @@
             </n-tag>
         </template>
 
-        <div
-            class="tech-popover-container"
-            :style="{ 
-                backgroundColor: themeVars.cardColor, 
-                border: `1px solid ${themeVars.borderColor}` 
-            }"
-        >
+        <div class="tech-popover-container" :style="{
+            backgroundColor: themeVars.cardColor,
+            border: `1px solid ${themeVars.borderColor}`
+        }">
             <ke_ji_ka_pian :id="id" />
         </div>
     </n-popover>
@@ -22,9 +19,9 @@
 
 <script setup>
 import { computed, inject } from 'vue';
-import { 获取科技数据 } from '@/pei_zhi_shu_ju.js';
-import ke_ji_ka_pian from '@/components/ke_ji_xi_tong/ke_ji_ka_pian.vue';
-import { use科技系统 } from '@/stores/ke_ji_xi_tong.js';
+import { 获取科技数据 } from '@/shared/pei_zhi_shu_ju.js';
+import { ke_ji_ka_pian } from '@/features/ke_ji_xi_tong/index';
+import { use科技系统 } from '@/features/ke_ji_xi_tong';
 import { useThemeVars } from 'naive-ui';
 
 const themeVars = useThemeVars();
@@ -45,11 +42,12 @@ const 触发跳转 = () => {
 
 <style scoped>
 .tech-popover-container {
-    width: 260px; 
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12); 
-    border-radius: 6px; 
+    width: 260px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-radius: 6px;
     overflow: hidden;
 }
+
 .tech-link-tag:hover {
     transform: translateY(-2px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

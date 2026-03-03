@@ -1,20 +1,18 @@
 <script setup>
 import { onMounted, watch, ref, computed, h, provide } from 'vue';
 
-import Wu_pin_lan from './components/wu_pin_xi_tong/wu_pin_lan.vue';
-import Wu_pin_xiang_qing from './components/wu_pin_xi_tong/wu_pin_xiang_qing.vue';
+import {wu_pin_lan,wu_pin_xiang_qing} from '@/features/wu_pin_xi_tong/index.js';
 import Ding_bu from './components/kuang_jia/ding_bu.vue';
-import Ke_ji_lan from './components/ke_ji_xi_tong/ke_ji_lan.vue';
-import Ke_ji_xiang_qing from './components/ke_ji_xi_tong/ke_ji_xiang_qing.vue';
-import Ji_suan_ji_mian_ban from './components/ji_suan_ji_xi_tong/ji_suan_ji_mian_ban.vue';
-import She_zhi_mian_ban from './components/she_zhi/0_she_zhi_mian_ban.vue';
+import { ke_ji_lan, ke_ji_xiang_qing } from './features/ke_ji_xi_tong/index.js';
+import {Ji_suan_ji_mian_ban} from '@/features/ji_suan_ji_xi_tong';
+import { she_zhi_mian_ban } from '@/features/she_zhi_xi_tong/index.js'
 
 import { darkTheme, useOsTheme } from 'naive-ui';
-import { use游戏设置 } from '@/stores/she_zhi.js';
+import { use游戏设置 } from '@/features/she_zhi_xi_tong/index.js';
 
-import { 启动游戏循环 } from './dong_tai_shu_ju.js';
-import { 启动自动存档, 读档 } from './cun_du_dang';
-import { use游戏控制 } from '@/stores/you_xi_kong_zhi.js';
+import { 启动游戏循环 } from './core/dong_tai_shu_ju.js';
+import { 启动自动存档, 读档 } from './core/cun_du_dang';
+import { use游戏控制 } from '@/features/you_xi_kong_zhi/store.js';
 const 游戏设置 = use游戏设置();
 
 const 游戏控制 = use游戏控制()
@@ -98,7 +96,7 @@ const menuOptions = [
 
             <div v-if="当前标签页 === 'shezhi'" style="height: 100%;">
               <h2 style="margin-bottom: 16px;">系统设置</h2>
-              <She_zhi_mian_ban />
+              <she_zhi_mian_ban />
             </div>
 
           </n-layout-content>

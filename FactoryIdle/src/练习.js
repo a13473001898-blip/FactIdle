@@ -1,7 +1,7 @@
 import { computed } from "vue";
-import { } from "./dong_tai_shu_ju";
-import {配置数据,物品类型, 获取所有物品列表 } from "./pei_zhi_shu_ju";
-import { 配方 as 配方配置 } from "./pei_zhi_shu_ju";
+import { } from "./core/dong_tai_shu_ju";
+import {配置数据,物品类型, 获取所有物品列表 } from "./shared/pei_zhi_shu_ju";
+import { 配方 as 配方配置 } from "./shared/pei_zhi_shu_ju";
 
 
 const 分类名称列表 = Object.values(物品类型)

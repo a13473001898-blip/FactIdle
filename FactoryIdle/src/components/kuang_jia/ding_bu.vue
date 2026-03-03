@@ -36,34 +36,22 @@
         </div>
       </div>
 
-      <n-flex gap="16px" :wrap="false">
-        <div v-for="type in ['热能', '蒸汽', '电力']" :key="type" class="energy-item">
-          <n-flex justify="space-between" align="baseline" style="margin-bottom: 2px;">
-            <n-text depth="3" style="font-size: 11px;">{{ type }}</n-text>
-            <n-text :class="['energy-value', 能源模块.获取能源状态颜色(type)]">
-              {{ 格式化数字(能源模块.查询能源(type)?.需求 || 0) }}/{{ 格式化数字(能源模块.查询能源(type)?.供应 || 0) }}
-            </n-text>
-          </n-flex>
-          <n-progress type="line" :percentage="能源模块.获取能源负载百分比(type)" :show-indicator="false"
-            :status="能源模块.获取能源状态颜色(type)" style="height: 6px;" />
-        </div>
-      </n-flex>
+      <neng_yuan_jian_kong />
     </n-flex>
   </n-flex>
 </template>
 
 <script setup>
 import { computed } from 'vue';
-import { 获取科技数据 } from '@/pei_zhi_shu_ju';
-import { use科技系统 } from '@/stores/ke_ji_xi_tong';
-import { use能源模块 } from '@/stores/neng_yuan_xi_tong.js';
-import { use游戏控制 } from '@/stores/you_xi_kong_zhi.js';
-import { use计算机系统 } from '@/stores/ji_suan_ji_xi_tong.js';
-import { 格式化数字, 格式化字节 } from '@/gong_ju'
-import { use游戏设置 } from '@/stores/she_zhi.js';
-import { use殖民地系统 } from '@/stores/zhi_min_di_xi_tong.js';
+import { 获取科技数据 } from '@/shared/pei_zhi_shu_ju';
+import { use科技系统 } from '@/features/ke_ji_xi_tong';
+import { use游戏控制 } from '@/features/you_xi_kong_zhi';
+import { use计算机系统 } from '@/features/ji_suan_ji_xi_tong';
+import { 格式化数字, 格式化字节 } from '@/shared/gong_ju'
+import { use游戏设置 } from '@/features/she_zhi_xi_tong/index.js';
+import { use殖民地系统 } from '@/features/zhi_min_di_xi_tong';
+import { neng_yuan_jian_kong } from '@/features/neng_yuan_xi_tong';
 
-const 能源模块 = use能源模块();
 const 科技系统 = use科技系统();
 const 游戏控制 = use游戏控制();
 const 计算机 = use计算机系统();

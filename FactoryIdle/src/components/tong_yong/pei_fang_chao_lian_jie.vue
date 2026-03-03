@@ -50,7 +50,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { 获取配方数据, 获取物品数据 } from '@/pei_zhi_shu_ju.js';
+import { 获取配方数据, 获取物品数据 } from '@/shared/pei_zhi_shu_ju.js';
 import Wu_pin_chao_lian_jie from './wu_pin_chao_lian_jie.vue';
 import { useThemeVars } from 'naive-ui';
 
