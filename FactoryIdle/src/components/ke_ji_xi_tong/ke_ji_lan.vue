@@ -34,21 +34,21 @@
                 <n-button-group size="small">
                   <n-button @click="尝试减少分配('ke_yan', machineId, 1 * 倍率,殖民地系统.当前视角ID)" style="width: 36px; font-weight: bold;">-</n-button>
                   <div class="allocation-number-box">
-                    {{ 格式化数字(配方分配.查询分配数量('ke_yan', machineId)) }}
+                    {{ 格式化数字(配方分配.查询分配数量('default', 'ke_yan', machineId, 殖民地系统.当前视角ID)) }}
                   </div>
                   <n-button @click="尝试增加分配('ke_yan', machineId, 1 * 倍率,殖民地系统.当前视角ID)" style="width: 36px; font-weight: bold;">+</n-button>
                 </n-button-group>
               </n-flex>
 
-              <div v-if="配方分配.查询分配数量('ke_yan', machineId) > 0" class="machine-status-action">
+              <div v-if="配方分配.查询分配数量('default', 'ke_yan', machineId, 殖民地系统.当前视角ID) > 0" class="machine-status-action">
                 <n-button 
                   block 
                   size="small" 
                   secondary
-                  :type="配方分配.查询建筑状态('ke_yan', machineId) === '运行' ? 'success' : 'error'"
-                  @click="切换状态('ke_yan', machineId,殖民地系统.当前视角ID)"
+                  :type="配方分配.查询建筑状态('default', 'ke_yan', machineId, 殖民地系统.当前视角ID) === '运行' ? 'success' : 'error'"
+                  @click="切换状态('ke_yan', machineId, 殖民地系统.当前视角ID, 'default')"
                 >
-                  {{ 配方分配.查询建筑状态('ke_yan', machineId) === '运行' ? '✅ 运转中 (点击停机)' : '⏸ 已停机 (点击启动)' }}
+                  {{ 配方分配.查询建筑状态('default', 'ke_yan', machineId, 殖民地系统.当前视角ID) === '运行' ? '✅ 运转中 (点击停机)' : '⏸ 已停机 (点击启动)' }}
                 </n-button>
               </div>
 

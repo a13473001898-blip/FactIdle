@@ -3,7 +3,7 @@
 
 视图层（UI 组件）限制：UI 组件内部严禁出现复杂的业务计算代码。组件内部的逻辑计算仅限于 UI 自身的颜色显示切换和进度条填充等纯视觉交互。
 
-数据层（Store）限制：Pinia Store 的 actions 严禁出现复杂的逻辑操作。Store 仅作为状态容器和简单的数据变更接口（如库存增减、状态切换）。
+数据层（Store）限制：Pinia Store 的 actions 严禁出现复杂的逻辑操作。不需要其他系统参与的方法放到这里,需要其他store参与的方法放到Composables文件夹里
 
 逻辑层（Systems / Composables）隔离：复杂的游戏计算逻辑（如全局速率结算、手动生产进度推进）被独立抽离至 systems（如 jie_suan_yin_qing.js）或 composables 中，由专门的循环引擎或触发器驱动。
 
@@ -11,8 +11,6 @@
 项目通过 .editorconfig、.prettierrc.json 和 eslint.config.js 实现了严格的自动化代码风格控制：
 
 基础缩进与换行：
-
-使用 2 个空格 进行缩进。
 
 换行符统一使用 LF (Unix 风格)。
 
@@ -25,8 +23,6 @@
 行宽限制：单行代码最大长度建议限制为 100 个字符（Prettier 也会以此宽度进行自动折行）。
 
 语句符号：
-
-禁止使用分号 (semi: false)，依赖 JavaScript 的自动分号插入（ASI）机制。
 
 单引号优先 (singleQuote: true)，字符串统一使用单引号。
 

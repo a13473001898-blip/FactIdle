@@ -6,7 +6,7 @@ export const 物品ID = {
     机自研究包: 'ji_zi_ke_ji_bao',
     石炉: 'shi_lu', 矿机: 'kuang_ji', 组装机: 'zu_zhuang_ji', 实验室: 'shi_yan_shi', 锅炉: 'guo_lu',
     蒸汽: 'zheng_qi', 电力: 'dian_li',
-    木质主板: 'mu_zhi_zhu_ban', 基础CPU: 'ji_chu_cpu', 内存_1K: 'nei_cun_1k', 内存_4K: 'nei_cun_4k', 创造内存: 'chuang_zao_nei_cun',
+    木质主板: 'mu_zhi_zhu_ban', 基础CPU: 'ji_chu_cpu', 双核CPU: 'shuang_he_cpu', 内存_1K: 'nei_cun_1k', 内存_4K: 'nei_cun_4k', 创造内存: 'chuang_zao_nei_cun',
     物体硬盘_1k: 'chang_gui_ying_pan_1k', 物体硬盘_4k: 'chang_gui_ying_pan_4k', 能源硬盘_1k: 'neng_yuan_ying_pan_1k', 创造物体硬盘: 'chuang_zao_ying_pan',
 }
 
@@ -18,7 +18,7 @@ export const 配方ID = {
     蒸汽制造: 'zheng_qi_zhi_zao_r',
     机自研究包: 'ji_zi_ke_ji_bao_r',
     木质主板制造: 'mu_zhi_zhu_ban_r', 基础CPU制造: 'ji_chu_cpu_r', 内存_1K制造: 'nei_cun_1k_r', 硬盘_1k制造: 'ying_pan_1k_r',
-    能源硬盘1KB制造: 'neng_yuan_ying_pan_1KB'
+    能源硬盘1KB制造: 'neng_yuan_ying_pan_1KB',双核CPU制造: 'shuang_he_cpu_r'
 }
 
 export const 科技ID = {
@@ -99,7 +99,7 @@ export const 物品配置 = {
     [物品ID.电力]: 能源(物品ID.电力, '电力', 0),
 
     // 硬件
-    [物品ID.木质主板]: 计算机硬件(物品ID.木质主板, '木质主板', 64, { CPU槽位: 1, 内存槽位: 2, 硬盘槽位: 2, 平台: '蒸汽' }),
+    [物品ID.木质主板]: 计算机硬件(物品ID.木质主板, '木质主板', 64, { CPU槽位: 2, 内存槽位: 2, 硬盘槽位: 2, 平台: '蒸汽' }),
     [物品ID.基础CPU]: 计算机硬件(物品ID.基础CPU, '基础CPU', 16, { 核心数: 1, 频率:1024, 平台: '蒸汽' }),
     [物品ID.内存_1K]: 计算机硬件(物品ID.内存_1K, '1K内存', 16, { 提供内存: 1024, 平台: '蒸汽' }),
     [物品ID.内存_4K]: 计算机硬件(物品ID.内存_4K, '4K内存', 16, { 提供内存: 4096, 平台: '蒸汽' }),
@@ -108,7 +108,8 @@ export const 物品配置 = {
     [物品ID.物体硬盘_4k]: 计算机硬件(物品ID.物体硬盘_4k, '4k物体硬盘', 32, { 提供容量: 4096, 平台: '蒸汽', 存储类别: '物体' }),
     [物品ID.创造内存]: 计算机硬件(物品ID.创造内存, '创造内存', 32, { 提供内存: 99999999, 平台: '蒸汽', }),
     [物品ID.创造物体硬盘]: 计算机硬件(物品ID.创造物体硬盘, '创造物体硬盘', 32, { 提供容量: 9999999999, 平台: '蒸汽', 存储类别: '物体' }),
-}
+    [物品ID.双核CPU]: 计算机硬件(物品ID.双核CPU, '双核CPU', 16, { 核心数: 2, 频率: 2048, 平台: '蒸汽' }),
+}   
 
 export const 配方配置 = {
     [配方ID.铁矿采集]: 采集(配方ID.铁矿采集, [], [[物品ID.铁矿, 1]], 1),
@@ -137,6 +138,8 @@ export const 配方配置 = {
     [配方ID.内存_1K制造]: 制造(配方ID.内存_1K制造, [[物品ID.铜板, 2], [物品ID.铜线, 5]], [[物品ID.内存_1K, 1]], 2),
     [配方ID.硬盘_1k制造]: 制造(配方ID.硬盘_1k制造, [[物品ID.铁板, 5], [物品ID.齿轮, 2]], [[物品ID.物体硬盘_1k, 1]], 2),
     [配方ID.能源硬盘1KB制造]: 制造(配方ID.能源硬盘1KB制造, [[物品ID.铁板, 5], [物品ID.齿轮, 2]], [[物品ID.能源硬盘_1k, 1]], 2),
+    [配方ID.双核CPU制造]: 制造(配方ID.双核CPU制造, [[物品ID.铁板, 2], [物品ID.铜线, 10]], [[物品ID.双核CPU, 1]], 5),
+
 }
 
 export const 建筑配置 = {

@@ -61,17 +61,17 @@
               <n-button-group size="small">
                 <n-button @click="尝试减少分配(recipe.id, machineId, 1 * 倍率, 殖民地系统.当前视角ID)">-</n-button>
                 <div class="machine-count-display">
-                  {{ 格式化数字(配方分配.查询分配数量(recipe.id, machineId)) }}
+                  {{ 格式化数字(配方分配.查询分配数量('default', recipe.id, machineId, 殖民地系统.当前视角ID)) }}
                 </div>
                 <n-button @click="尝试增加分配(recipe.id, machineId, 1 * 倍率, 殖民地系统.当前视角ID)">+</n-button>
               </n-button-group>
             </n-flex>
 
-            <div v-if="配方分配.查询分配数量(recipe.id, machineId) > 0" class="machine-status-toggle">
+            <div v-if="配方分配.查询分配数量('default', recipe.id, machineId, 殖民地系统.当前视角ID) > 0" class="machine-status-toggle">
               <n-button block size="small" secondary
-                :type="配方分配.查询建筑状态(recipe.id, machineId) === '运行' ? 'success' : 'error'"
-                @click="切换状态(recipe.id, machineId, 殖民地系统.当前视角ID)">
-                {{ 配方分配.查询建筑状态(recipe.id, machineId) === '运行' ? '✅ 运行中' : '⏸ 已停工' }}
+                :type="配方分配.查询建筑状态('default', recipe.id, machineId, 殖民地系统.当前视角ID) === '运行' ? 'success' : 'error'"
+                @click="切换状态(recipe.id, machineId, 殖民地系统.当前视角ID, 'default')">
+                {{ 配方分配.查询建筑状态(recipe.id, machineId, 殖民地系统.当前视角ID, 'default') === '运行' ? '✅ 运行中' : '⏸ 已停工' }}
               </n-button>
             </div>
           </div>
