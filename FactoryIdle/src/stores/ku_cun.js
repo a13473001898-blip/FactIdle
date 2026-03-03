@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { 获取物品数据 } from '@/pei_zhi_shu_ju.js'
 import { use殖民地系统 } from './zhi_min_di_xi_tong'
+import { 读取cid } from '@/gong_ju.js';
+
 
 export const use库存 = defineStore('ku_cun', {
   state: () => ({
@@ -27,11 +29,6 @@ export const use库存 = defineStore('ku_cun', {
       return 物品.类型 === '建筑' || 物品.类型 === '计算机硬件'
     },
 
-    _getColonyIdForRead(colonyId) {
-      if (colonyId) return colonyId;
-      const 殖民地系统 = use殖民地系统()
-      return colonyId || 殖民地系统.当前视角ID
-    },
 
     // ================= 查询接口 =================
 
@@ -39,7 +36,7 @@ export const use库存 = defineStore('ku_cun', {
       if (this._isGlobalItem(id)) {
         return this.云端数据[id] || 0
       }
-      const cid = this._getColonyIdForRead(colonyId)
+      const cid = 读取cid(colonyId)
       return this.本地数据[cid]?.[id] || 0
     },
 

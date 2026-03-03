@@ -32,11 +32,11 @@
               <n-flex justify="space-between" align="center">
                 <n-text depth="3" style="font-size: 13px;">投入数量</n-text>
                 <n-button-group size="small">
-                  <n-button @click="配方分配.减少分配数量('ke_yan', machineId, 1 * 倍率,殖民地系统.当前视角ID)" style="width: 36px; font-weight: bold;">-</n-button>
+                  <n-button @click="尝试减少分配('ke_yan', machineId, 1 * 倍率,殖民地系统.当前视角ID)" style="width: 36px; font-weight: bold;">-</n-button>
                   <div class="allocation-number-box">
                     {{ 格式化数字(配方分配.查询分配数量('ke_yan', machineId)) }}
                   </div>
-                  <n-button @click="尝试增加分配('ke_yan', machineId, 1 * 倍率)" style="width: 36px; font-weight: bold;">+</n-button>
+                  <n-button @click="尝试增加分配('ke_yan', machineId, 1 * 倍率,殖民地系统.当前视角ID)" style="width: 36px; font-weight: bold;">+</n-button>
                 </n-button-group>
               </n-flex>
 
@@ -46,7 +46,7 @@
                   size="small" 
                   secondary
                   :type="配方分配.查询建筑状态('ke_yan', machineId) === '运行' ? 'success' : 'error'"
-                  @click="配方分配.切换建筑状态('ke_yan', machineId,殖民地系统.当前视角ID)"
+                  @click="切换状态('ke_yan', machineId,殖民地系统.当前视角ID)"
                 >
                   {{ 配方分配.查询建筑状态('ke_yan', machineId) === '运行' ? '✅ 运转中 (点击停机)' : '⏸ 已停机 (点击启动)' }}
                 </n-button>
@@ -91,6 +91,7 @@ import { 格式化数字 } from '@/gong_ju';
 import Wu_pin_chao_lian_jie from '../tong_yong/wu_pin_chao_lian_jie.vue';
 import { useMessage, useThemeVars } from 'naive-ui';
 import { use殖民地系统 } from '@/stores/zhi_min_di_xi_tong.js';
+import { use建筑调度 } from '@/composables/jian_zhu_diao_du.js';
 
 const emit = defineEmits(['发送科技id']);
 const 科技系统 = use科技系统();
@@ -99,6 +100,7 @@ const 配方分配 = use配方分配();
 const message = useMessage();
 const themeVars = useThemeVars(); // 修正：初始化变量
 const 殖民地系统 = use殖民地系统();
+const { 尝试增加分配, 尝试减少分配, 切换状态 } = use建筑调度();
 
 // 筛选状态与倍率
 const 当前筛选 = ref('可研究');
@@ -110,17 +112,6 @@ const 可用实验室列表 = computed(() => {
     .map(b => b.id);
 });
 
-// 拦截验证函数
-const 尝试增加分配 = (配方id, 建筑id, 期望数量) => {
-  const cid = 殖民地系统.当前视角ID;
-    const 之前数量 = 配方分配.查询分配数量(配方id, 建筑id);
-    const 拦截结果 = 配方分配.增加分配数量(配方id, 建筑id, 期望数量,cid);
-    const 之后数量 = 配方分配.查询分配数量(配方id, 建筑id);
-    
-    if (拦截结果 === false || (之后数量 - 之前数量 < 期望数量 && 库存.查询库存(建筑id) > 0)) {
-        message.warning('内存容量已达上限！请前往计算中心扩展阵列。');
-    }
-};
 
 const 所有科技数组 = Object.values(获取所有科技列表());
 

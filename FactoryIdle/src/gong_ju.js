@@ -1,5 +1,5 @@
 import { use游戏设置 } from '@/stores/she_zhi.js';
-
+import { use殖民地系统 } from '@/stores/zhi_min_di_xi_tong.js'; 
 
 const 算法_标准后缀 = (num, 精度) => {
     if (Math.abs(num) < 1000) return num.toFixed(Math.abs(num) < 10 ? 精度 : 0);
@@ -55,4 +55,14 @@ export const 格式化字节 = (bytes) => {
     // 如果是 B (0级)，不需要小数，否则保留两位小数
     if (i === 0) return Math.floor(bytes) + ' ' + sizes[i];
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+/**
+ * 规则：优先使用显式传入的 ID；若缺省，则自动降级读取当前 UI 视角。
+ * 警告：严禁用于任何写操作（增删改）！
+ */
+export const 读取cid = (传入的ID) => {
+    if (传入的ID) return 传入的ID;
+    const 殖民地系统 = use殖民地系统();
+    return 殖民地系统 ? 殖民地系统.当前视角ID : 'main_base'; // 增加兜底防止初始化时序报错
 };

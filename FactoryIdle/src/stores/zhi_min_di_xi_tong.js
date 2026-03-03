@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { 全局_初始化新殖民地 } from './index.js';
 
 export const use殖民地系统 = defineStore('zhi_min_di', {
   state: () => ({
@@ -54,6 +55,10 @@ export const use殖民地系统 = defineStore('zhi_min_di', {
      */
     发现新殖民地(配置) {
       this.列表.push(配置)
+
+      全局_初始化新殖民地(配置.id);
+
+      console.log(`🚀 新殖民地 ${配置.名称}(${配置.id}) 档案建立完毕！`);
     },
 
     // ================= 存档接口 =================

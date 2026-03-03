@@ -65,8 +65,6 @@ const menuOptions = [
 
 <template>
   <n-config-provider :theme="当前主题">
-    <n-global-style />
-
     <n-dialog-provider>
     <n-message-provider>
 

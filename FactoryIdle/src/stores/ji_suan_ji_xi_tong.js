@@ -217,194 +217,90 @@ export const use计算机系统 = defineStore('ji_suan_ji_xi_tong', {
 
             const 最大允许字节 = Math.max(专属保底字节, 当前占用字节) + 公共池剩余;
             return Math.floor(最大允许字节 / 单体字节);
-        }
+        },
+
+        分类已用容量: (state) => (category, cid) => {
+            const 库存 = use库存();
+            const 目标cid = cid || use殖民地系统().当前视角ID;
+            const 所有物品 = 获取所有物品列表();
+            let totalUsed = 0;
+
+            for (const 物品id in 所有物品) {
+                const 物品 = 所有物品[物品id];
+                // 排除建筑和硬件（它们在云端库），只统计本地仓库的物资
+                if (物品.类型 !== '建筑' && 物品.类型 !== '计算机硬件') {
+                    if (获取物品存储类别(物品id) === category) {
+                        totalUsed += (库存.查询库存(物品id, 目标cid) || 0) * (物品.字节 || 1);
+                    }
+                }
+            }
+            return totalUsed;
+        },
     },
 
     actions: {
-        _initColonySlot(cid) {
-            if (!cid) { console.error("🚨 [致命防御] 计算机_initColonySlot 缺省 cid！"); return 物理机箱模板(); }
+        初始化新殖民地(cid) {
+            if (!cid) { console.error("🚨 [致命防御] 计算机初始化新殖民地 缺省 cid！"); return 物理机箱模板(); }
             if (!this.本地插槽[cid]) this.本地插槽[cid] = 物理机箱模板();
             return this.本地插槽[cid];
         },
 
         // 🌟 新增：设置本地划拨给云端的配额
-        设置云端配额(目标字节, colonyId) {
-            if (!colonyId) { console.error(`🚨 [致命防御] 尝试设置云端配额但未提供 colonyId！`); return false; }
-            const cid = colonyId;
-            const 机箱 = this._initColonySlot(cid);
-
-            if (目标字节 < 0) 目标字节 = 0;
-
-            const 旧配额 = 机箱.云端配额 || 0;
-            const 增加量 = 目标字节 - 旧配额;
-
-            if (增加量 > 0) {
-                // 如果增加上行容量，检查本地物体硬盘有没有空余空间
-                const 物体总容量 = this.分类总容量(cid)['物体'] || 0;
-                const 物体已分配保底 = this.分类已分配保底(cid)['物体'] || 0;
-                
-                if (物体已分配保底 + 旧配额 + 增加量 > 物体总容量) {
-                    return false; // 本地物理硬盘装不下了
-                }
-            } else if (增加量 < 0) {
-                // 如果要缩减配额，必须确保缩减后，全网不会爆盘
-                const 减少量 = -增加量;
-                const 全网剩余空间 = this.全网总云端容量 - this.全网已用云端容量;
-                if (减少量 > 全网剩余空间) {
-                    return false; // 强行缩减会导致现有的建筑/主板因为无处存放而损坏！
-                }
-            }
-
+_设置云端配额(目标字节, cid) {
+            const 机箱 = this.初始化新殖民地(cid);
             机箱.云端配额 = 目标字节;
             引擎信号.需要重新结算 = true;
-            return true;
         },
-
-        // ==========================
-        // 下方的 安装/卸载 方法保持上一轮改造的代码不变即可
-        // ==========================
-        安装主板(物品id, colonyId) {
-            if (!colonyId) { console.error(`🚨 [致命防御] 尝试安装主板但未提供 colonyId！`); return false; }
-            const cid = colonyId;
-            const 机箱 = this._initColonySlot(cid);
-            const 库存 = use库存();
-            if (机箱.装备的主板) return false;
-            if (库存.库存减少(物品id, 1, 'cloud_item_dummy_cid')) {
-                机箱.装备的主板 = 物品id;
-                引擎信号.需要重新结算 = true;
-                return true;
-            }
-            return false;
-        },
-        卸载主板(colonyId) {
-            if (!colonyId) { console.error(`🚨 [致命防御] 尝试卸载主板但未提供 colonyId！`); return false; }
-            const cid = colonyId;
-            const 机箱 = this._initColonySlot(cid);
-            const 库存 = use库存();
-            if (!机箱.装备的主板) return false;
-            if (机箱.装备的内存.length > 0 || 机箱.装备的硬盘.length > 0 || 机箱.装备的CPU) return false;
-            库存.库存增加(机箱.装备的主板, 1, 'cloud_item_dummy_cid');
-            机箱.装备的主板 = null;
-            引擎信号.需要重新结算 = true;
-            return true;
-        },
-        安装CPU(物品id, colonyId) {
-            if (!colonyId) { console.error(`🚨 [致命防御] 尝试安装CPU但未提供 colonyId！`); return false; }
-            const cid = colonyId;
-            const 机箱 = this._initColonySlot(cid);
-            const 库存 = use库存();
-            const 物品数据 = 获取物品数据(物品id);
-            if (!机箱.装备的主板 || 机箱.装备的CPU) return false;
-            if (物品数据.平台 && 物品数据.平台 !== this.当前平台(cid)) return false;
-            if (this.槽位限制(cid).CPU < 1) return false;
-            if (库存.库存减少(物品id, 1, 'cloud_item_dummy_cid')) {
-                机箱.装备的CPU = 物品id;
-                引擎信号.需要重新结算 = true;
-                return true;
-            }
-            return false;
-        },
-        卸载CPU(colonyId) {
-            if (!colonyId) { console.error(`🚨 [致命防御] 尝试卸载CPU但未提供 colonyId！`); return false; }
-            const cid = colonyId;
-            const 机箱 = this._initColonySlot(cid);
-            const 库存 = use库存();
-            if (!机箱.装备的CPU) return;
-            库存.库存增加(机箱.装备的CPU, 1, 'cloud_item_dummy_cid');
-            机箱.装备的CPU = null;
+        _安装主板(物品id, cid) {
+            this.初始化新殖民地(cid).装备的主板 = 物品id;
             引擎信号.需要重新结算 = true;
         },
-        安装内存(物品id, colonyId) {
-            if (!colonyId) { console.error(`🚨 [致命防御] 尝试安装内存但未提供 colonyId！`); return false; }
-            const cid = colonyId;
-            const 机箱 = this._initColonySlot(cid);
-            const 库存 = use库存();
-            const 物品数据 = 获取物品数据(物品id);
-            if (!机箱.装备的主板) return false;
-            if (物品数据.平台 && 物品数据.平台 !== this.当前平台(cid)) return false;
-            if (机箱.装备的内存.length >= this.槽位限制(cid).内存) return false;
-            if (库存.库存减少(物品id, 1, 'cloud_item_dummy_cid')) {
-                机箱.装备的内存.push(物品id);
-                引擎信号.需要重新结算 = true;
-                return true;
-            }
-            return false;
-        },
-        卸载内存(索引index, colonyId) {
-            if (!colonyId) { console.error(`🚨 [致命防御] 尝试卸载内存但未提供 colonyId！`); return false; }
-            const cid = colonyId;
-            const 机箱 = this._initColonySlot(cid);
-            const 库存 = use库存();
-            if (索引index < 0 || 索引index >= 机箱.装备的内存.length) return;
-            const 卸载的物品id = 机箱.装备的内存.splice(索引index, 1)[0];
-            库存.库存增加(卸载的物品id, 1, 'cloud_item_dummy_cid');
+        _卸载主板(cid) {
+            this.初始化新殖民地(cid).装备的主板 = null;
             引擎信号.需要重新结算 = true;
         },
-        安装硬盘(物品id, colonyId) {
-            if (!colonyId) { console.error(`🚨 [致命防御] 尝试安装硬盘但未提供 colonyId！`); return false; }
-            const cid = colonyId;
-            const 机箱 = this._initColonySlot(cid);
-            const 库存 = use库存();
-            const 物品数据 = 获取物品数据(物品id);
-            if (!机箱.装备的主板) return false;
-            if (物品数据.平台 && 物品数据.平台 !== this.当前平台(cid)) return false;
-            if (机箱.装备的硬盘.length >= this.槽位限制(cid).硬盘) return false;
-            if (库存.库存减少(物品id, 1, 'cloud_item_dummy_cid')) {
-                机箱.装备的硬盘.push(物品id);
-                引擎信号.需要重新结算 = true;
-                return true;
-            }
-            return false;
-        },
-        卸载硬盘(索引index, colonyId) {
-            if (!colonyId) { console.error(`🚨 [致命防御] 尝试卸载硬盘但未提供 colonyId！`); return false; }
-            const cid = colonyId;
-            const 机箱 = this._initColonySlot(cid);
-            const 库存 = use库存();
-            if (索引index < 0 || 索引index >= 机箱.装备的硬盘.length) return false;
-            const 拟卸载硬件 = 获取物品数据(机箱.装备的硬盘[索引index]);
-            const 类别 = 拟卸载硬件?.存储类别 || '物体';
-            const 损失容量 = 拟卸载硬件?.提供容量 || 0;
-            const 当前总容量 = this.分类总容量(cid)[类别];
-            
-            // 🌟 卸载硬盘也要确保不能压爆云端和保底
-            const 云端占用 = 类别 === '物体' ? (机箱.云端配额 || 0) : 0;
-            const 当前总保底 = this.分类已分配保底(cid)[类别] + 云端占用;
-
-            if (当前总容量 - 损失容量 < 当前总保底) {
-                return false;
-            }
-            const 卸载的物品id = 机箱.装备的硬盘.splice(索引index, 1)[0];
-            库存.库存增加(卸载的物品id, 1, 'cloud_item_dummy_cid');
+        _安装CPU(物品id, cid) {
+            this.初始化新殖民地(cid).装备的CPU = 物品id;
             引擎信号.需要重新结算 = true;
-            return true;
         },
-        设置保底配额(物品id, 目标数量, colonyId) {
-            if (!colonyId) { console.error(`🚨 [致命防御] 尝试设置保底配额但未提供 colonyId！`); return false; }
-            const cid = colonyId;
-            const 机箱 = this._initColonySlot(cid);
-            if (目标数量 < 0) 目标数量 = 0;
-            const 类别 = 获取物品存储类别(物品id);
-            const 单体字节 = 获取物品数据(物品id)?.字节 || 1;
-            const 旧数量 = 机箱.保底配额表[物品id] || 0;
-            const 增加的数量 = 目标数量 - 旧数量;
-            const 需要新增的字节 = 增加的数量 * 单体字节;
-            
-            // 🌟 计算时带入云端配额
-            const 云端占用 = 类别 === '物体' ? (机箱.云端配额 || 0) : 0;
-            const 该类总保底 = this.分类已分配保底(cid)[类别] + 云端占用;
-            const 该类总容量 = this.分类总容量(cid)[类别] || 0;
-
-            if (该类总保底 + 需要新增的字节 > 该类总容量) {
-                return false;
-            }
+        _卸载CPU(cid) {
+            this.初始化新殖民地(cid).装备的CPU = null;
+            引擎信号.需要重新结算 = true;
+        },
+        _安装内存(物品id, cid) {
+            this.初始化新殖民地(cid).装备的内存.push(物品id);
+            引擎信号.需要重新结算 = true;
+        },
+        _卸载内存(索引index, cid) {
+            this.初始化新殖民地(cid).装备的内存.splice(索引index, 1);
+            引擎信号.需要重新结算 = true;
+        },
+        _安装硬盘(物品id, cid) {
+            this.初始化新殖民地(cid).装备的硬盘.push(物品id);
+            引擎信号.需要重新结算 = true;
+        },
+        _卸载硬盘(索引index, cid) {
+            this.初始化新殖民地(cid).装备的硬盘.splice(索引index, 1);
+            引擎信号.需要重新结算 = true;
+        },
+        _设置保底配额(物品id, 目标数量, cid) {
+            const 机箱 = this.初始化新殖民地(cid);
             if (目标数量 === 0) {
                 delete 机箱.保底配额表[物品id];
             } else {
                 机箱.保底配额表[物品id] = 目标数量;
             }
             引擎信号.需要重新结算 = true;
-            return true;
+        },
+
+        _强制清空机箱(cid) {
+            const 机箱 = this.初始化新殖民地(cid)
+            机箱.装备的主板 = null
+            机箱.装备的CPU = null
+            机箱.装备的内存 = []
+            机箱.装备的硬盘 = []
+            // 注意：保底配额和云端划拨表保留，硬件重新安装后会自动生效
+            引擎信号.需要重新结算 = true
         },
 
         导出数据() { return { 本地插槽: this.本地插槽 }; },

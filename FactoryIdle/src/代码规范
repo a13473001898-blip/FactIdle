@@ -1,0 +1,117 @@
+一、 核心架构与分层规范
+根据项目核心指导文件，项目严格执行数据层、逻辑层和显示层的三层分离架构。
+
+视图层（UI 组件）限制：UI 组件内部严禁出现复杂的业务计算代码。组件内部的逻辑计算仅限于 UI 自身的颜色显示切换和进度条填充等纯视觉交互。
+
+数据层（Store）限制：Pinia Store 的 actions 严禁出现复杂的逻辑操作。Store 仅作为状态容器和简单的数据变更接口（如库存增减、状态切换）。
+
+逻辑层（Systems / Composables）隔离：复杂的游戏计算逻辑（如全局速率结算、手动生产进度推进）被独立抽离至 systems（如 jie_suan_yin_qing.js）或 composables 中，由专门的循环引擎或触发器驱动。
+
+二、 代码格式化与风格规范
+项目通过 .editorconfig、.prettierrc.json 和 eslint.config.js 实现了严格的自动化代码风格控制：
+
+基础缩进与换行：
+
+使用 2 个空格 进行缩进。
+
+换行符统一使用 LF (Unix 风格)。
+
+文件末尾保留一个空行 (insert_final_newline = true)。
+
+自动修剪行尾多余空格 (trim_trailing_whitespace = true)。
+
+字符集：统采用 utf-8 编码。
+
+行宽限制：单行代码最大长度建议限制为 100 个字符（Prettier 也会以此宽度进行自动折行）。
+
+语句符号：
+
+禁止使用分号 (semi: false)，依赖 JavaScript 的自动分号插入（ASI）机制。
+
+单引号优先 (singleQuote: true)，字符串统一使用单引号。
+
+三、 命名规范
+项目采用了一种极具特色且高度一致的拼音与中文混合命名法，以最大化业务逻辑的直观可读性。
+
+文件与目录命名 (拼音下划线)：
+
+组件、Store 和逻辑文件均采用拼音全拼+下划线 (snake_case) 的方式命名。例如：ji_suan_ji_xi_tong.vue (计算机系统)、wu_pin_ka_pian.vue (物品卡片)、pei_zhi_shu_ju.js (配置数据)。
+
+变量、函数与属性命名 (中文)：
+
+业务实体高度本地化，直接使用中文命名，如：const 计算机 = use计算机系统()、function 获取物品数据(id)、物品.名称。
+
+常量枚举使用中文键值，如：物品ID.铁矿、配方类型.熔炼。
+
+响应式状态使用中文，如：const 当前选中配方ID = ref(null)。
+
+Store 命名 (模块化)：
+
+Pinia Store 实例化函数遵循 use + 中文模块名 的格式，如：use库存()、use科技系统()、use配方分配()。
+
+四、 Vue 3 组件规范
+API 风格：全盘采用 Vue 3 <script setup> 组合式 API。
+
+样式隔离：所有的组件样式必须使用 <style scoped> 进行作用域隔离，防止样式污染。
+
+主题与动态样式：
+
+深度集成 Naive UI，组件标签以 n- 开头（如 <n-card>、<n-flex>）。
+
+动态主题颜色通过 Naive UI 的 useThemeVars() 获取，并在 <style scoped> 中通过 v-bind('themeVars.xxx') 注入（如 color: v-bind('themeVars.primaryColor')），避免硬编码颜色十六进制值。
+
+组件传值：
+
+跨层级事件触发（如点击物品跳转详情）主要使用 provide/inject（如 inject('全局跳转物品')）或在小组件中抛出自定义事件 (defineEmits)。
+
+五、 数据管理与持久化规范
+状态容器：所有需要跨组件或跨周期持久化的数据必须存放于 Pinia Stores (如 ku_cun.js, zhi_min_di_xi_tong.js)。
+
+响应式解耦：为了避免 Vue 代理带来的性能损耗，底层配置数据（如 pei_zhi_shu_ju.js 导出的 配置数据）使用了 Object.freeze() 进行了深度冻结，仅作为静态只读字典。
+
+全局信号与脏标记机制：系统中引入了类似 ECS 架构的脏标记机制（引擎信号.需要重新结算 = true;），避免不必要的每帧重新计算。
+
+存档与读档机制：
+
+实施统一的数据进出接口：每个 Store 都必须实现 导出数据() 和 导入数据(存档数据, 版本号) 两个标准 action，由统一的 cun_du_dang.js 模块集中调度本地 localStorage 的序列化与反序列化。
+
+六、 Linting 与编译工具链
+构建工具：基于 Vite。
+
+ESLint：采用最新的 ESLint Flat Config (eslint.config.js)，集成了 @eslint/js 推荐规则和 eslint-plugin-vue 的 Vue 3 essential 规则。
+
+冲突处理：通过 @vue/eslint-config-prettier/skip-formatting 跳过 ESLint 中与 Prettier 冲突的格式化规则，将格式化职责完全移交给 Prettier。
+
+1. 逻辑驱动与时间处理规范
+固定步长更新 (Fixed Timestep)：游戏核心逻辑不直接依赖于帧率（FPS），而是通过 累加器 (accumulator) 机制实现固定的逻辑帧（10 TPS / 每 0.1秒更新一次）。这种模式保证了生产速率计算在不同设备上的结果一致性。
+
+防休眠处理：在 启动游戏循环 中设置了 真实流逝秒数 > 1 的强制阶段，防止浏览器标签页进入后台休眠后恢复时产生的逻辑瞬间暴走。
+
+2. 强校验的“防御性”编程模式
+多殖民地 ID 锁定 (CID Enforcement)：
+
+读操作：通常具备容错性，若未传 colonyId 则默认指向当前视角 ID。
+
+写操作：实行“严苛”校验。在 ku_cun.js 和 pei_fang_fen_pei.js 等 Store 的写操作中，若缺失 colonyId 会触发明显的 console.error 并终止操作。
+
+上下文一致性：在 shou_dong_sheng_chan.js 等复合逻辑中，任务一旦开始，会立即“锁死”目标殖民地 ID，防止玩家在生产中切换视角导致产物发错星球。
+
+3. 高性能结算与脏标记机制
+脏标记 (Dirty Flag)：系统不进行无意义的重复计算。只有当库存归零、新物品产出或手动更改分配等关键行为发生时，才会将 引擎信号.需要重新结算 设为 true。
+
+多轮迭代算法：在 jie_suan_yin_qing.js 中，针对复杂的供需链路采用 8次迭代 的满足率消除算法，这能有效处理多级加工中的“虚假承诺”问题（即防止因上游原料瞬间短缺导致的链式结算错误）。
+
+4. 响应式 Store 设计模式
+Getter 计算密集化：Store 内部大量使用 computed Getters 进行跨系统计算（例如 ji_suan_ji_xi_tong.js 中的 已用内存容量），这使得 UI 组件只需读取最终数值，无需关心底层复杂的遍历逻辑。
+
+组合式 API 单例模式：use手动生产 等 Composable 采用在函数外部定义 reactive 状态的模式，确保全局只有一个手动生产进度，无论该 Hook 在多少个组件中被调用，数据都是同步的。
+
+5. 数据安全与配置规范
+深度冻结 (Deep Freeze)：pei_zhi_shu_ju.js 中的所有静态配置在导出前都会经过 冻结对象 函数处理，防止逻辑运行过程中意外修改基础数值（如铁板的热值、配方的输入数量等）。
+
+动态属性生成：项目倾向于通过算法动态计算属性而非硬编码。例如，物品的 字节 (Byte) 占用大小是根据其配方原料自动递归生成的，并按 1.5 倍步进对齐，这减少了新增物品时的配置工作量。
+
+6. UI 交互响应规范
+操作倍率支持：在 ke_ji_lan.vue 和 pei_fang_ka_pian.vue 中，涉及数量的操作必须支持 x1/x10/x100/x1000 的倍率切换，以适应中后期大规模工业建设的需求。
+
+拦截与反馈：在组件层对非法操作（如内存不足时增加机器数量）进行预拦截，并通过 Naive UI 的 message 提供即时反馈，而非在底层 Store 中静默失败。

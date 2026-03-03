@@ -59,18 +59,18 @@
             <n-flex justify="space-between" align="center">
               <n-text depth="3" style="font-size: 13px;">已分配</n-text>
               <n-button-group size="small">
-                <n-button @click="配方分配.减少分配数量(recipe.id, machineId, 1 * 倍率, 殖民地系统.当前视角ID)">-</n-button>
+                <n-button @click="尝试减少分配(recipe.id, machineId, 1 * 倍率, 殖民地系统.当前视角ID)">-</n-button>
                 <div class="machine-count-display">
                   {{ 格式化数字(配方分配.查询分配数量(recipe.id, machineId)) }}
                 </div>
-                <n-button @click="尝试增加分配(recipe.id, machineId, 1 * 倍率)">+</n-button>
+                <n-button @click="尝试增加分配(recipe.id, machineId, 1 * 倍率, 殖民地系统.当前视角ID)">+</n-button>
               </n-button-group>
             </n-flex>
 
             <div v-if="配方分配.查询分配数量(recipe.id, machineId) > 0" class="machine-status-toggle">
               <n-button block size="small" secondary
                 :type="配方分配.查询建筑状态(recipe.id, machineId) === '运行' ? 'success' : 'error'"
-                @click="配方分配.切换建筑状态(recipe.id, machineId, 殖民地系统.当前视角ID)">
+                @click="切换状态(recipe.id, machineId, 殖民地系统.当前视角ID)">
                 {{ 配方分配.查询建筑状态(recipe.id, machineId) === '运行' ? '✅ 运行中' : '⏸ 已停工' }}
               </n-button>
             </div>
@@ -90,6 +90,8 @@ import { use库存 } from '@/stores/ku_cun.js'
 import { use配方分配 } from '@/stores/pei_fang_fen_pei.js';
 import { useMessage, useThemeVars } from 'naive-ui';
 import { use殖民地系统 } from '@/stores/zhi_min_di_xi_tong.js';
+import { use建筑调度 } from '@/composables/jian_zhu_diao_du.js';
+const { 尝试增加分配, 尝试减少分配, 切换状态 } = use建筑调度();
 
 const themeVars = useThemeVars();
 const message = useMessage();
@@ -122,17 +124,6 @@ const 获取可用机器ID列表 = (类型) => {
     .map(b => b.id);
 };
 
-// 内存拦截验证逻辑
-const 尝试增加分配 = (配方id, 建筑id, 期望数量) => {
-  const cid = 殖民地系统.当前视角ID;
-  const 之前数量 = 配方分配.查询分配数量(配方id, 建筑id);
-  const 拦截结果 = 配方分配.增加分配数量(配方id, 建筑id, 期望数量, cid);
-  const 之后数量 = 配方分配.查询分配数量(配方id, 建筑id);
-
-  if (拦截结果 === false || (之后数量 - 之前数量 < 期望数量 && 库存.查询库存(建筑id) > 0)) {
-    message.warning('算力/内存不足！请检查殖民地计算中心。');
-  }
-};
 </script>
 
 <style scoped>

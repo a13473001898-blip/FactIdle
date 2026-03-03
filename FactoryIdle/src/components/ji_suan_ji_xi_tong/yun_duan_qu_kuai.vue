@@ -47,12 +47,11 @@ import { computed } from 'vue';
 import { use计算机系统 } from '@/stores/ji_suan_ji_xi_tong.js';
 import { use殖民地系统 } from '@/stores/zhi_min_di_xi_tong.js';
 import { 格式化字节 } from '@/gong_ju';
-import { useMessage, useThemeVars } from 'naive-ui'; 
+import { use硬件调度 } from '@/composables/ying_jian_diao_du.js'; // 🌟 引入
 
-const themeVars = useThemeVars(); 
 const 计算机 = use计算机系统();
 const 殖民地系统 = use殖民地系统();
-const message = useMessage();
+const { 尝试设置云端配额 } = use硬件调度(); // 🌟 解构调度方法
 
 const 云端使用率 = computed(() => {
     if (计算机.全网总云端容量 === 0) return 0;
@@ -63,32 +62,22 @@ const 云端报警 = computed(() => 云端使用率.value > 95);
 
 const 本地云端配额 = computed(() => 计算机._当前机箱.云端配额 || 0);
 
-// 🌟 判定是否可以分配空间：必须有主板且至少有一块硬盘
 const 禁止分配 = computed(() => {
     return !计算机._当前机箱.装备的主板 || 计算机._当前机箱.装备的硬盘.length === 0;
 });
 
 const 更新本地云端配额 = (目标值) => {
-    if (目标值 === null || 目标值 < 0) 目标值 = 0;
-    const cid = 殖民地系统.当前视角ID;
-    
-    const 成功 = 计算机.设置云端配额(目标值, cid);
-    if (!成功) {
-        if (目标值 > 本地云端配额.value) {
-            message.warning("本地物体存储空间不足，无法划拨更多给云端！");
-        } else {
-            message.error("缩减失败！这会导致云端空间被撑爆，损坏现有云端资产！");
-        }
-    }
+    // 🌟 核心：调度层会检查减少配额是否会损坏云端资产，或增加配额是否会挤爆本地硬盘
+    尝试设置云端配额(目标值 || 0, 殖民地系统.currentViewId || 殖民地系统.当前视角ID);
 };
 </script>
 
 <style scoped>
 .cloud-allocator-box {
-    background-color: v-bind('themeVars.actionColor'); 
+    background-color: rgba(0,0,0,0.02); 
     padding: 12px; 
     border-radius: 6px; 
-    border: 1px solid v-bind('themeVars.borderColor');
+    border: 1px solid #eee;
 }
 .allocator-title { font-size: 12px; margin-bottom: 8px; display: block; }
 .allocator-value { font-size: 12px; width: 80px; text-align: right; }
