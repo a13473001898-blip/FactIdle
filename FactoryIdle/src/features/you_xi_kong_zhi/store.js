@@ -3,7 +3,8 @@ import { defineStore } from 'pinia';
 export const use游戏控制 = defineStore('you_xi_kong_zhi', {
     state: () => ({
         暂停: false,
-        计算面板显示: false // 👈 新增：控制右侧计算中心抽屉的开关
+        计算面板显示: false, // 👈 新增：控制右侧计算中心抽屉的开关
+        航线面板显示: false
     }),
     actions: {
         切换暂停状态() {
@@ -14,6 +15,13 @@ export const use游戏控制 = defineStore('you_xi_kong_zhi', {
         },
         关闭计算面板() {
             this.计算面板显示 = false;
+        },
+
+        打开航线面板() {
+            this.航线面板显示 = true;
+        },
+        关闭航线面板() {
+            this.航线面板显示 = false;
         },
 
         // ================= 存档接口 =================

@@ -19,26 +19,33 @@
       </n-button-group>
     </n-flex>
 
-    <n-flex gap="24px" align="center" :wrap="false">
-      <div style="width: 180px; flex-shrink: 0;">
-        <n-text depth="3" v-if="!科技系统.当前研发.科技ID" style="font-size: 12px;">暂无研发项目</n-text>
-        <div v-else>
-          <n-flex justify="space-between" align="baseline" style="margin-bottom: 2px;">
-            <n-text strong class="truncate-text" style="font-size: 13px; max-width: 130px;">
-              {{ 获取科技数据(科技系统.当前研发.科技ID)?.名称 }}
-            </n-text>
-            <n-text style="font-size: 11px; font-family: monospace;" depth="3">
-              {{ Math.floor((科技系统.当前研发.已完成比例 || 0) * 100) }}%
-            </n-text>
-          </n-flex>
-          <n-progress type="line" :percentage="(科技系统.当前研发.已完成比例 || 0) * 100" :show-indicator="false" status="info"
-            processing style="height: 6px;" />
-        </div>
-      </div>
-
-      <neng_yuan_jian_kong />
-    </n-flex>
+    <n-button-group>
+      <n-button  @click="游戏控制.打开航线面板()">
+        <span class="header-stat">运输总览</span>
+      </n-button>
+    </n-button-group>
   </n-flex>
+
+  <n-flex gap="24px" align="center" :wrap="false">
+    <div style="width: 180px; flex-shrink: 0;">
+      <n-text depth="3" v-if="!科技系统.当前研发.科技ID" style="font-size: 12px;">暂无研发项目</n-text>
+      <div v-else>
+        <n-flex justify="space-between" align="baseline" style="margin-bottom: 2px;">
+          <n-text strong class="truncate-text" style="font-size: 13px; max-width: 130px;">
+            {{ 获取科技数据(科技系统.当前研发.科技ID)?.名称 }}
+          </n-text>
+          <n-text style="font-size: 11px; font-family: monospace;" depth="3">
+            {{ Math.floor((科技系统.当前研发.已完成比例 || 0) * 100) }}%
+          </n-text>
+        </n-flex>
+        <n-progress type="line" :percentage="(科技系统.当前研发.已完成比例 || 0) * 100" :show-indicator="false" status="info"
+          processing style="height: 6px;" />
+      </div>
+    </div>
+
+    <neng_yuan_jian_kong />
+  </n-flex>
+
 </template>
 
 <script setup>

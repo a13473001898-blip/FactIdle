@@ -1,7 +1,7 @@
 // src/shared/types.js
 
 /**
- * @typedef {('资源'|'原材料'|'零部件'|'高级零部件'|'建筑'|'科技包'|'能源'|'计算机硬件'|'流体')} ItemCategory 物品分类
+ * @typedef {('资源'|'原材料'|'零部件'|'高级零部件'|'建筑'|'科技包'|'能源'|'计算机硬件'|'流体'|'飞船模块')} ItemCategory 物品分类
  * @typedef {('采集'|'熔炼'|'制造'|'研究'|'烧水')} RecipeCategory 配方/建筑分类
  * @typedef {('热能'|'蒸汽'|'电力'|'无')} EnergyType 能源类型
  * @typedef {('物体'|'能源'|'流体')} StorageCategory 存储类别
@@ -20,11 +20,19 @@
  * @property {number} [CPU槽位] - 主板提供的CPU插槽数 (可选)
  * @property {number} [内存槽位] - 主板提供的内存插槽数 (可选)
  * @property {number} [硬盘槽位] - 主板提供的硬盘插槽数 (可选)
+ * @property {number} [网卡槽位] - 主板提供的网卡插槽数 (可选)
  * @property {number} [核心数] - CPU提供的核心数量 (可选)
  * @property {number} [频率] - CPU单核频率上限 (可选)
  * @property {number} [提供内存] - 内存条提供的容量 (可选)
  * @property {number} [提供容量] - 硬盘提供的容量 (可选)
  * @property {StorageCategory} [存储类别] - 硬盘存储的分类 (可选)
+ * @property {number} [传输带宽] - 网卡提供的带宽容量 (可选)
+ * @property {number} [并发连接] - 网卡提供的并发数量 (可选)
+ * @property {number} [引擎槽位] - 飞船船体提供的引擎插槽数 (可选)
+ * @property {number} [辅助槽位] - 飞船船体提供的辅助插槽数 (可选)
+ * @property {number} [基础质量] - 飞船船体的基础质量 (可选)
+ * @property {number} [最大航线节点] - 辅助提供的最大航行节点数量 (可选)
+ * @property {number} [推力] - 引擎提供的推力 (可选)
  */
 
 /**

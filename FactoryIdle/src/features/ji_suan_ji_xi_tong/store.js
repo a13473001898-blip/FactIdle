@@ -11,7 +11,7 @@ import { 全局常量 } from '@/shared/constants';
 
 function 物理机箱模板() {
     // 🌟 新增：云端配额 (划拨给全网云端的字节数)
-    return { 装备的主板: null, 装备的CPU: [], 装备的内存: [], 装备的硬盘: [], 保底配额表: {}, 云端配额: 0 };
+    return { 装备的主板: null, 装备的CPU: [], 装备的内存: [], 装备的硬盘: [], 装备的网卡: [], 保底配额表: {}, 云端配额: 0 };
 }
 
 export const use计算机系统 = defineStore('ji_suan_ji_xi_tong', {
@@ -22,6 +22,7 @@ export const use计算机系统 = defineStore('ji_suan_ji_xi_tong', {
                 装备的CPU: [物品ID.基础CPU],
                 装备的内存: [物品ID.创造内存],
                 装备的硬盘: [物品ID.创造物体硬盘],
+                装备的网卡: [],
                 保底配额表: {},
                 云端配额: 0 // 🌟 初始默认为 0
             }
@@ -46,7 +47,8 @@ export const use计算机系统 = defineStore('ji_suan_ji_xi_tong', {
             return {
                 CPU: 主板数据?.CPU槽位 || 0,
                 内存: 主板数据?.内存槽位 || 0,
-                硬盘: 主板数据?.硬盘槽位 || 0
+                硬盘: 主板数据?.硬盘槽位 || 0,
+                网卡: 主板数据?.网卡槽位 || 0
             };
         },
         总内存容量: (state) => (cid) => {
@@ -242,6 +244,23 @@ export const use计算机系统 = defineStore('ji_suan_ji_xi_tong', {
             }
             return totalUsed;
         },
+
+        获取基地网络性能: (state) => (cid) => {
+            const 目标cid = cid || use殖民地系统().当前视角ID;
+            const 机箱 = state.本地插槽[目标cid] || 物理机箱模板();
+
+            let 总带宽 = 10;   // 基础保底带宽（字节/秒）
+            let 并发上限 = 1;  // 基础保底并发（同时处理多少艘船）
+
+            if (机箱.装备的主板) {
+                机箱.装备的网卡.forEach(id => {
+                    const 数据 = 获取物品数据(id);
+                    总带宽 += (数据?.传输带宽 || 0);
+                    并发上限 += (数据?.并发连接 || 0);
+                });
+            }
+            return { 总带宽, 并发上限 };
+        },
     },
 
     actions: {
@@ -290,6 +309,14 @@ export const use计算机系统 = defineStore('ji_suan_ji_xi_tong', {
             this.初始化新殖民地(cid).装备的硬盘.splice(索引index, 1);
             引擎信号.需要重新结算 = true;
         },
+        _安装网卡(物品id, cid) {
+            this.初始化新殖民地(cid).装备的网卡.push(物品id);
+            引擎信号.需要重新结算 = true;
+        },
+        _卸载网卡(索引index, cid) {
+            this.初始化新殖民地(cid).装备的网卡.splice(索引index, 1);
+            引擎信号.需要重新结算 = true;
+        },
         _设置保底配额(物品id, 目标数量, cid) {
             const 机箱 = this.初始化新殖民地(cid);
             if (目标数量 === 0) {
@@ -318,6 +345,7 @@ export const use计算机系统 = defineStore('ji_suan_ji_xi_tong', {
                     [全局常量.初始基地ID]: {
                         装备的主板: 存档数据.装备的主板, 装备的CPU: 存档数据.装备的CPU,
                         装备的内存: 存档数据.装备的内存 || [], 装备的硬盘: 存档数据.装备的硬盘 || [],
+                        装备的网卡: 存档数据.装备的网卡 || [],
                         保底配额表: 存档数据.保底配额表 || {}, 云端配额: 0
                     }
                 };

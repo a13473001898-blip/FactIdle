@@ -72,7 +72,7 @@ export function use硬件调度() {
         return false
     };
 
-const 尝试卸载CPU = (索引index, cid) => {
+    const 尝试卸载CPU = (索引index, cid) => {
         if (!cid) return false
         const 机箱 = 计算机.本地插槽[cid]
         if (!机箱 || 索引index < 0 || 索引index >= 机箱.装备的CPU.length) return false
@@ -95,21 +95,21 @@ const 尝试卸载CPU = (索引index, cid) => {
                 const 产线 = 生产线系统.数据[cid]?.find(l => l.id === lineId);
                 if (产线) 绑定核心 = 产线.绑定核心索引;
             }
-            
+
             const 频率上限 = 获取单核频率上限(绑定核心, cid);
             const 实际负载 = 计算生产线负载(lineId, cid);
-            
+
             // 如果失去 CPU 导致该核心算力归零，或者算力被腰斩支撑不住了
             if (实际负载 > 频率上限) {
                 for (const 配方id in 本地所有线[lineId]) {
                     for (const 建筑id in 本地所有线[lineId][配方id]) {
-                         // 强制停机
-                         本地所有线[lineId][配方id][建筑id].状态 = '停止';
+                        // 强制停机
+                        本地所有线[lineId][配方id][建筑id].状态 = '停止';
                     }
                 }
             }
         }
-        
+
         // 触发全局重新结算
         引擎信号.需要重新结算 = true;
         message.success(`已拔出 CPU：${获取物品数据(卸载的物品id).名称}。算力不足的产线已自动停机保护。`)
@@ -195,6 +195,36 @@ const 尝试卸载CPU = (索引index, cid) => {
         return true;
     };
 
+    const 尝试安装网卡 = (物品id, cid) => {
+        if (!cid) return false;
+        const 机箱 = 计算机.本地插槽[cid];
+        if (!机箱?.装备的主板) return false;
+
+        // 校验槽位
+        const 槽位限制 = 计算机.槽位限制(cid);
+        if (机箱.装备的网卡.length >= 槽位限制.网卡) {
+            message.warning("主板网卡插槽已满！");
+            return false;
+        }
+
+        if (库存.库存减少(物品id, 1, 'cloud_item_dummy_cid')) {
+            计算机._安装网卡(物品id, cid);
+            return true;
+        }
+        return false;
+    };
+
+    const 尝试卸载网卡 = (index, cid) => {
+        if (!cid) return false;
+        const 机箱 = 计算机.本地插槽[cid];
+        if (!机箱 || index < 0 || index >= 机箱.装备的网卡.length) return false;
+
+        const 卸载的物品id = 机箱.装备的网卡[index];
+        计算机._卸载网卡(index, cid);
+        库存.库存增加(卸载的物品id, 1, 'cloud_item_dummy_cid');
+        return true;
+    };
+
     const 尝试设置保底配额 = (物品id, 目标数量, cid) => {
         if (!cid) return false;
         if (目标数量 < 0) 目标数量 = 0;
@@ -277,6 +307,7 @@ const 尝试卸载CPU = (索引index, cid) => {
     return {
         尝试安装主板, 尝试卸载主板, 尝试安装CPU, 尝试卸载CPU,
         尝试安装内存, 尝试卸载内存, 尝试安装硬盘, 尝试卸载硬盘,
+        尝试安装网卡, 尝试卸载网卡,
         尝试设置保底配额, 尝试设置云端配额, 强制全员卸载
     };
 }

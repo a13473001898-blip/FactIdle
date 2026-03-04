@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { 获取物品数据 } from '@/shared/pei_zhi_shu_ju.js'
+import { 物品ID, 获取物品数据 } from '@/shared/pei_zhi_shu_ju.js'
 import { 读取cid } from '@/shared/gong_ju.js';
 import { 全局常量 } from '@/shared/constants';
 
@@ -13,15 +13,21 @@ export const use库存 = defineStore('ku_cun', {
     state: () => ({
         /** @type {LocalInventory} */
         本地数据: {
-            [全局常量.初始基地ID]: { mei_tan: 500 }
+            [全局常量.初始基地ID]: { mei_tan: 5 }
         },
 
         /** @type {InventoryRecord} */
         云端数据: {
-            kuang_ji: 10,
-            shi_lu: 10,
-            guo_lu: 5,
-            shi_yan_shi: 5
+            'kuang_ji': 10,
+            'shi_lu': 10,
+            'guo_lu': 5,
+            'shi_yan_shi': 5,
+            [物品ID.组装机] : 5,
+            [物品ID.化学推进器] : 10,
+            [物品ID.基础导航模块] : 10,
+            [物品ID.百兆网卡] : 10,
+            [物品ID.轻型运输舰体] : 10,
+            [物品ID.离子推进器] : 10,
         }
     }),
 
@@ -29,7 +35,7 @@ export const use库存 = defineStore('ku_cun', {
         _isGlobalItem(id) {
             const 物品 = 获取物品数据(id)
             if (!物品) return false
-            return 物品.类型 === '建筑' || 物品.类型 === '计算机硬件'
+            return 物品.类型 === '建筑' || 物品.类型 === '计算机硬件' || 物品.类型 === '飞船模块'
         },
 
 

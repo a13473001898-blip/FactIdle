@@ -6,6 +6,7 @@ import Ding_bu from './components/kuang_jia/ding_bu.vue';
 import { ke_ji_lan, ke_ji_xiang_qing } from './features/ke_ji_xi_tong/index.js';
 import { Ji_suan_ji_mian_ban } from '@/features/ji_suan_ji_xi_tong';
 import { she_zhi_mian_ban } from '@/features/she_zhi_xi_tong/index.js'
+import { ben_di_gang_kou, quan_ju_wu_liu_gai_lan } from '@/features/wu_liu_xi_tong/index.js';
 
 import { darkTheme, useOsTheme } from 'naive-ui';
 import { use游戏设置 } from '@/features/she_zhi_xi_tong/index.js';
@@ -29,7 +30,7 @@ const handleAction = (payload) => {
     // 方式 A：来自我们新改造的生产线面板或总览
     dq_xuan_ze_id.value = payload.itemId;
     // 无论是具体的 line_xxx 还是 overview，都原封不动传下去
-    dq_line_id.value = payload.lineId; 
+    dq_line_id.value = payload.lineId;
   } else {
     // 方式 B：来自超链接纯文本 (点击图标等)
     dq_xuan_ze_id.value = payload;
@@ -69,6 +70,7 @@ const 当前标签页 = ref('wupin');
 const menuOptions = [
   { label: '物品', key: 'wupin' },
   { label: '科技', key: 'keji' },
+  { label: '港口', key: 'gangkou' },
   { label: '设置', key: 'shezhi' },
 ];
 
@@ -98,13 +100,18 @@ const menuOptions = [
             <n-layout-content style=" padding: 24px;">
 
               <div v-if="当前标签页 === 'wupin'">
-                <h2 style="margin-bottom: 16px;">物品概览</h2>
+                <h2 style="margin-bottom: 16px;">生产概览</h2>
                 <wu_pin_lan @发送物品id="handleAction" />
               </div>
 
               <div v-if="当前标签页 === 'keji'">
                 <h2 style="margin-bottom: 16px;">科技研发</h2>
                 <ke_ji_lan @发送科技id="handleKeJiAction" />
+              </div>
+
+              <div v-if="当前标签页 === 'gangkou'" style="height: 100%;">
+                <h2 style="margin-bottom: 16px;">运输港口</h2>
+                <ben_di_gang_kou />
               </div>
 
               <div v-if="当前标签页 === 'shezhi'" style="height: 100%;">
@@ -132,6 +139,12 @@ const menuOptions = [
 
             <Ji_suan_ji_mian_ban />
 
+          </n-drawer-content>
+        </n-drawer>
+
+        <n-drawer v-model:show="游戏控制.航线面板显示" :width="900" placement="right">
+          <n-drawer-content title="🚀 帝国航线调度中心" closable>
+            <quan_ju_wu_liu_gai_lan />
           </n-drawer-content>
         </n-drawer>
 
