@@ -13,7 +13,7 @@ export const use库存 = defineStore('ku_cun', {
     state: () => ({
         /** @type {LocalInventory} */
         本地数据: {
-            [全局常量.初始基地ID]: { mei_tan: 5 }
+            [全局常量.初始基地ID]: { mei_tan: 10000 }
         },
 
         /** @type {InventoryRecord} */
@@ -28,6 +28,9 @@ export const use库存 = defineStore('ku_cun', {
             [物品ID.百兆网卡] : 10,
             [物品ID.轻型运输舰体] : 10,
             [物品ID.离子推进器] : 10,
+            [物品ID.创造物体硬盘]: 10,
+            [物品ID.物体硬盘_1k]:  10,
+            [物品ID.木质主板]: 10
         }
     }),
 

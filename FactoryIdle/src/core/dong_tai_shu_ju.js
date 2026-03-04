@@ -7,7 +7,7 @@ import { 执行全局速率结算 } from '@/core/jie_suan_yin_qing.js';
 import { 引擎信号 } from "./quan_ju_xin_hao.js";
 import { use计算机系统 } from "../features/ji_suan_ji_xi_tong";
 import { use手动生产 } from '@/features/sheng_chan_xi_tong';
-
+import { 执行航行推演, 执行港口吞吐 } from '@/features/wu_liu_xi_tong/composables/wu_liu_guan_li.js';
 // =================游戏核心函数=================
 
 
@@ -85,6 +85,9 @@ export function 启动游戏循环() {
                 推进库存自然增长(固定步长秒)
 
                 手动生产更新(固定步长秒);
+
+                执行航行推演(固定步长秒);
+                执行港口吞吐(固定步长秒);
                 // ================= 逻辑帧结束 =================
 
                 累加器 -= 固定步长秒;

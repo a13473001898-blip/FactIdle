@@ -134,7 +134,7 @@ const menuOptions = [
 
         </n-layout>
 
-        <n-drawer v-model:show="游戏控制.计算面板显示" :width="800" placement="right">
+        <n-drawer v-model:show="游戏控制.计算面板显示" :width="800" placement="right" display-directive="show">
           <n-drawer-content title="💻 殖民地计算中心" closable>
 
             <Ji_suan_ji_mian_ban />
@@ -142,7 +142,7 @@ const menuOptions = [
           </n-drawer-content>
         </n-drawer>
 
-        <n-drawer v-model:show="游戏控制.航线面板显示" :width="900" placement="right">
+        <n-drawer v-model:show="游戏控制.航线面板显示" :width="1200" placement="right" display-directive="show">
           <n-drawer-content title="🚀 帝国航线调度中心" closable>
             <quan_ju_wu_liu_gai_lan />
           </n-drawer-content>

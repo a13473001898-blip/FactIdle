@@ -32,19 +32,19 @@
         <n-divider style="margin: 16px 0;" />
 
         <div class="slot-group" :style="{ opacity: 计算机._当前机箱.装备的主板 ? 1 : 0.4 }">
-        <n-text depth="3" class="slot-title">
-            CPU插槽 - {{ 计算机._当前机箱.装备的CPU.length }} / {{ 计算机.槽位限制().CPU }}
-        </n-text>
-        <div v-for="(id, index) in 计算机._当前机箱.装备的CPU" :key="'cpu-' + index" class="hardware-item">
-            <wu_pin_chao_lian_jie :id="id" />
-            <n-tag size="small" type="success" :bordered="false">{{ 获取物品数据(id)?.频率 }}Hz</n-tag>
-            <n-button size="tiny" type="error" ghost @click="尝试卸载CPU(index, 殖民地系统.当前视角ID)">拔出</n-button>
-        </div>
-        <div v-for="i in Math.max(0, 计算机.槽位限制().CPU - 计算机._当前机箱.装备的CPU.length)" :key="'empty-cpu-' + i"
-            class="hardware-empty">
-            <n-select :value="null" :options="可用CPU选项" placeholder="空槽位 - 点击插上CPU..." size="small"
-                @update:value="(val) => 尝试安装CPU(val, 殖民地系统.当前视角ID)" />
-        </div>
+            <n-text depth="3" class="slot-title">
+                CPU插槽 - {{ 计算机._当前机箱.装备的CPU.length }} / {{ 计算机.槽位限制().CPU }}
+            </n-text>
+            <div v-for="(id, index) in 计算机._当前机箱.装备的CPU" :key="'cpu-' + index" class="hardware-item">
+                <wu_pin_chao_lian_jie :id="id" />
+                <n-tag size="small" type="success" :bordered="false">{{ 获取物品数据(id)?.频率 }}Hz</n-tag>
+                <n-button size="tiny" type="error" ghost @click="尝试卸载CPU(index, 殖民地系统.当前视角ID)">拔出</n-button>
+            </div>
+            <div v-for="i in Math.max(0, 计算机.槽位限制().CPU - 计算机._当前机箱.装备的CPU.length)" :key="'empty-cpu-' + i"
+                class="hardware-empty">
+                <n-select :value="null" :options="可用CPU选项" placeholder="空槽位 - 点击插上CPU..." size="small"
+                    @update:value="(val) => 尝试安装CPU(val, 殖民地系统.当前视角ID)" />
+            </div>
         </div>
 
         <n-divider style="margin: 16px 0;" />
@@ -82,6 +82,23 @@
                     @update:value="(val) => 尝试安装硬盘(val, 殖民地系统.当前视角ID)" />
             </div>
         </div>
+
+        <div class="slot-group" :style="{ opacity: 计算机._当前机箱.装备的主板 ? 1 : 0.4 }">
+            <n-text depth="3" class="slot-title">
+                网卡插槽 - {{ 计算机._当前机箱.装备的网卡.length }} / {{ 计算机.槽位限制().网卡 }}
+            </n-text>
+            <div v-for="(id, index) in 计算机._当前机箱.装备的网卡" :key="'hdd-' + index" class="hardware-item">
+                <wu_pin_chao_lian_jie :id="id" />
+                <n-tag size="small" type="warning" :bordered="false">
+                    {{ 格式化字节(获取物品数据(id)?.传输带宽) }}
+                </n-tag>
+                <n-button size="tiny" type="error" ghost @click="尝试卸载网卡(index, 殖民地系统.当前视角ID)">拔出</n-button>
+            </div>
+            <div v-for="i in 剩余网卡槽位" :key="'empty-hdd-' + i" class="hardware-empty">
+                <n-select :value="null" :options="可用网卡选项" placeholder="空槽位 - 点击插上网卡..." size="small"
+                    @update:value="(val) => 尝试安装网卡(val, 殖民地系统.当前视角ID)" />
+            </div>
+        </div>
     </n-card>
 </template>
 
@@ -107,6 +124,7 @@ const {
     尝试安装CPU, 尝试卸载CPU,
     尝试安装内存, 尝试卸载内存,
     尝试安装硬盘, 尝试卸载硬盘,
+    尝试安装网卡, 尝试卸载网卡,
     强制全员卸载
 } = use硬件调度();
 
@@ -133,8 +151,14 @@ const 可用硬盘选项 = computed(() => {
         .map(item => ({ label: `${item.名称} (+${格式化字节(item.提供容量)})`, value: item.id }));
 });
 
+const 可用网卡选项 = computed(() => {
+    return 所有物品数组.filter(item => item.传输带宽 > 0 && item.平台 === 计算机.当前平台() && 库存.查询库存(item.id) >= 1)
+        .map(item => ({ label: `${item.名称} (+${格式化字节(item.传输带宽)})`, value: item.id }));
+});
+
 const 剩余内存槽位 = computed(() => Math.max(0, 计算机.槽位限制().内存 - 计算机._当前机箱.装备的内存.length));
 const 剩余硬盘槽位 = computed(() => Math.max(0, 计算机.槽位限制().硬盘 - 计算机._当前机箱.装备的硬盘.length));
+const 剩余网卡槽位 = computed(() => Math.max(0, 计算机.槽位限制().网卡 - 计算机._当前机箱.装备的网卡.length));
 
 const 待装主板 = ref(null);
 
